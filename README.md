@@ -10,12 +10,12 @@ Gravitas, Acumen & Co (GAC) opera mandatos de customer experience y claims para 
 - Pasos de SOP no cumplidos (p. ej. requisitos de cumplimiento como *Law 25*).
 - Tono o redacción inadecuada en interacciones de fricción alta.
 
-El objetivo del demo es mostrar un copiloto que, en tiempo real, **analiza lo visible del ticket** (campos, texto del cliente, comentarios, adjuntos) y lo cruza con **SOPs** y principios de comunicación para entregar **recordatorios y recomendaciones accionables**, sin modificar automáticamente el ticket.
+El objetivo del demo es mostrar un copiloto que, en tiempo real, **analiza lo visible del ticket** (campos, texto del cliente, comentarios, adjuntos) y lo cruza con **SOPs** y principios de comunicación para entregar **recordatorios y recomendaciones accionables**, sin modificar automáticamente el ticket; al mismo tiempo, realizar el desarrollo del producto bajo un marco de trabajo ágil.
 
 ## Qué hay en este repo
 - `data/raw/`: **SOPs y documentos fuente** (PDF) usados como base de conocimiento para el demo.
 - `data/interim/`: documentos intermedios (p. ej. versiones o extractos en DOCX) para preparación/ingesta.
-- `docs/`: documentación interna del trabajo (p. ej. embeddings/ingesta).
+- `docs/`: documentación interna del trabajo (p. ej. embeddings/ingesta/planeación del proyecto).
 - `notebooks/`: notebooks de experimentación/ingesta.  
   - `notebooks/ingestion_politics_mueblesrd.ipynb`: ingesta de PDFs a un vector store en **Pinecone** usando **LangChain** + **OpenAI embeddings**.
 - `reports/`: salidas/exportaciones del trabajo (p. ej. PDF exportado desde Colab del notebook).
