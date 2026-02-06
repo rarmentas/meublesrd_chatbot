@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ ticket.numero }} | {% trans "Requête" %} – MeublesRD Service{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-2">
+  <span class="text-muted small me-2">MeublesRD Service</span>
+  <span class="text-muted small me-2">{% trans "Requêtes" %}</span>
+  <span class="badge bg-danger me-2">{{ ticket.numero }} | {% trans "Requête" %}</span>
+</div>
+
+<div class="row g-3">
+  <!-- Columna izquierda -->
+  <div class="col-lg-3">
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+        <span><i class="bi bi-briefcase text-danger me-1"></i> {% trans "Détails de: Requête" %}</span>
+        <i class="bi bi-chevron-down text-muted"></i>
+      </div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Numéro de la requête" %}</span><span class="field-value">{{ ticket.numero }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Propriétaire de la requête" %}</span><a href="#" class="field-link">{{ ticket.proprietaire }}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Statut" %}</span><span class="field-value">{{ ticket.get_statut_display }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Priorité" %}</span><span class="field-value">{{ ticket.get_priorite_display }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Objet" %}</span><span class="field-value small">{{ ticket.objet|truncatewords:12 }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row"><span class="field-label">{% trans "Description" %}</span><p class="small mb-0 mt-1">{{ ticket.description|default:"—" }}</p><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+        <span><i class="bi bi-person text-primary me-1"></i> {% trans "Détails de: Contact" %}</span>
+        <i class="bi bi-chevron-down text-muted"></i>
+      </div>
+      <div class="card-body py-2">
+        {% if ticket.contact %}
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nom complet" %}</span><a href="#" class="field-link">{{ ticket.contact.nom_complet }}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Adresse e-mail" %}</span><a href="#" class="field-link">{{ ticket.contact.adresse_email }}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nom du compte" %}</span><a href="#" class="field-link">{{ ticket.contact.nom_du_compte|default:"—" }}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Téléphone mobile" %}</span><span class="field-value">{{ ticket.contact.telephone_mobile|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Téléphone" %}</span><span class="field-value">{{ ticket.contact.telephone|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        {% else %}
+        <p class="small text-muted mb-0">—</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+        <span><i class="bi bi-briefcase text-danger me-1"></i> {% trans "Requêtes de l'élément parent Contact" %} (1)</span>
+        <i class="bi bi-chevron-down text-muted"></i>
+      </div>
+      <div class="card-body py-2">
+        <div class="field-row"><a href="#" class="field-link">{{ ticket.numero }}</a></div>
+        <div class="field-row"><span class="field-label">{% trans "Statut" %}:</span> {{ ticket.get_statut_display }}</div>
+        <div class="field-row"><span class="field-label">{% trans "Date d'ouverture" %}:</span> {% if ticket.date_ouverture %}{{ ticket.date_ouverture|date:"Y-m-d H:i" }}{% else %}—{% endif %}</div>
+        <div class="field-row"><span class="field-label">{% trans "Objet" %}:</span> {{ ticket.objet|truncatewords:6 }}...</div>
+        <a href="#" class="small">{% trans "Afficher tout" %}</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Columna central (scroll) -->
+  <div class="col-lg-6">
+    <div class="card card-section mb-3">
+      <div class="card-body">
+        <h2 class="h6 mb-2">{{ ticket.objet|truncatewords:6 }}...</h2>
+        <div class="btn-group btn-group-sm mb-2">
+          <button type="button" class="btn btn-outline-secondary">{% trans "Modifier" %}</button>
+          <button type="button" class="btn btn-outline-secondary">{% trans "Modifier le propriétaire" %}</button>
+          <button type="button" class="btn btn-outline-secondary">{% trans "Nouvelle requête enfant" %}</button>
+        </div>
+        <div class="row small g-2 mb-2">
+          <div class="col-6"><span class="field-label">{% trans "Classification" %}:</span> {{ ticket.classification|default:"—" }}</div>
+          <div class="col-6"><span class="field-label">{% trans "Sous-sujet" %}:</span> {{ ticket.sous_sujet|default:"—" }}</div>
+          <div class="col-6"><span class="field-label">{% trans "Requête principale" %}:</span> {{ ticket.requete_principale|default:"—" }}</div>
+          <div class="col-6"><span class="field-label">{% trans "Propriétaire de la requête" %}:</span> <a href="#" class="field-link">{{ ticket.proprietaire }}</a></div>
+          <div class="col-6"><span class="field-label">{% trans "Origine" %}:</span> {{ ticket.origine|default:"—" }}</div>
+        </div>
+        <!-- Barre de statut -->
+        <div class="mb-2">
+          <div class="d-flex small text-muted">
+            <span class="me-2 {% if ticket.statut == 'nouveau' %}fw-bold text-primary{% endif %}">{% trans "Nouveau" %}</span>
+            <span class="me-2">{% trans "En traitement" %}</span>
+            <span class="me-2">{% trans "En attente du client" %}</span>
+            <span class="me-2">{% trans "En suspens" %}</span>
+            <span>{% trans "Fermé" %}</span>
+          </div>
+          <div class="progress" style="height: 4px;"><div class="progress-bar" style="width: 20%;"></div></div>
+          <span class="small">{% trans "Statut" %}: {{ ticket.get_statut_display }}</span>
+          <button type="button" class="btn btn-sm btn-meubles ms-2">✓ {% trans "Marquer Statut comme terminé(e)" %}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "Champs clés" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Classification" %}</span><span>{{ ticket.classification|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Sous-sujet" %}</span><span>{{ ticket.sous_sujet|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Type de la requête du client (Interne)" %}</span><span>{{ ticket.type_requete_client_interne|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Numéro du contrat d'achat" %}</span><span>{{ ticket.numero_contrat_achat|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-2">
+      <li class="nav-item"><a class="nav-link" href="#">{% trans "Fil" %}</a></li>
+      <li class="nav-item"><a class="nav-link active" href="#">{% trans "Détails" %}</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">{% trans "Cartes RD" %}</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">{% trans "Associé" %}</a></li>
+    </ul>
+
+    <!-- Case Information -->
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "Case Information" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Numéro de la requête" %}</span><span>{{ ticket.numero }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Propriétaire de la requête" %}</span><a href="#" class="field-link">{{ ticket.proprietaire }}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Magasin" %}</span><span>{{ ticket.magasin|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Requête principale" %}</span><span>{{ ticket.requete_principale|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nom du compte" %}</span><a href="#" class="field-link">{% if ticket.contact %}{{ ticket.contact.nom_du_compte|default:ticket.contact.nom_complet }}{% else %}—{% endif %}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Statut" %}</span><span>{{ ticket.get_statut_display }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">LeadId</span><span>{{ ticket.lead_id|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Priorité" %}</span><span>{{ ticket.get_priorite_display }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nom du contact" %}</span><a href="#" class="field-link">{% if ticket.contact %}{{ ticket.contact.nom_complet }}{% else %}—{% endif %}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "CC du courriel" %}</span><span>{{ ticket.cc_courriel|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Origine de la requête" %}</span><span>{{ ticket.origine_requete|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Suiveur" %}</span><span>{{ ticket.suiveur|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+
+    <!-- Description Information -->
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "Description Information" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row"><span class="field-label">{% trans "Objet" %}</span><p class="small mb-0">{{ ticket.objet }}</p><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row"><span class="field-label">{% trans "Description" %}</span><p class="small mb-0">{{ ticket.description|default:"—" }}</p><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Envoyer un courriel au contact ?" %}</span><input type="checkbox" {% if ticket.envoyer_courriel_contact %}checked{% endif %}><i class="bi bi-info-circle text-danger"></i></div>
+        <div class="field-row"><span class="field-label">{% trans "Commentaires internes" %}</span><span>{{ ticket.commentaires_internes|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row"><span class="field-label">{% trans "Modification SMS" %}</span><span>{{ ticket.modification_sms|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+
+    <!-- Category -->
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "Category" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Classification" %}</span><span>{{ ticket.classification|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Sous-sujet" %}</span><span>{{ ticket.sous_sujet|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Type de la requête du client (Interne)" %}</span><span>{{ ticket.type_requete_client_interne|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Sujet livraison (interne)" %}</span><span>{{ ticket.sujet_livraison_interne|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Sujet ADS (interne)" %}</span><span>{{ ticket.sujet_ads_interne|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Avis formel" %}</span><span>{{ ticket.avis_formel|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Numéro du contrat d'achat" %}</span><span>{{ ticket.numero_contrat_achat|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Manufacturier" %}</span><span>{{ ticket.manufacturier|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Code de produit" %}</span><span>{{ ticket.code_produit|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Type de produit" %}</span><span>{{ ticket.type_produit|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "No de série de l'appareil" %}</span><span>{{ ticket.no_serie_appareil|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Type d'achat" %}</span><span>{{ ticket.type_achat|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "No de la requête à suivre" %}</span><span>{{ ticket.no_requete_a_suivre|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">ADS Need Type</span><span>{{ ticket.ads_need_type|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+
+    <!-- Delivery Information -->
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "Delivery Information" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Type de réception" %}</span><span>{{ ticket.type_reception|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Région de livraison" %}</span><span>{{ ticket.region_livraison|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "No du compte client Meublex" %}</span><span>{{ ticket.no_compte_client_meublex|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Date de livraison" %}</span><span>{% if ticket.date_livraison %}{{ ticket.date_livraison|date:"Y-m-d" }}{% else %}—{% endif %}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Ajustement contrat +1/-1" %}</span><span>{{ ticket.ajustement_contrat|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Capacité de cubage" %}</span><span>{{ ticket.capacite_cubage|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Plage horaire désirée" %}</span><span>{{ ticket.plage_horaire_desiree|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Changement sur contrat bloqué" %}</span><span>{{ ticket.changement_contrat_bloque|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row"><span class="field-label">{% trans "Instructions spéciales" %}</span><span>{{ ticket.instructions_speciales|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+
+    <!-- ADS Information -->
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "ADS Information" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Numéro d'ADS" %}</span><span>{{ ticket.numero_ads|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Solution" %}</span><span>{{ ticket.solution|default:"—" }}</span><i class="bi bi-exclamation-circle text-danger"></i><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row"><span class="field-label">{% trans "Information Additionnelle" %}</span><span>{{ ticket.information_additionnelle|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Type de dommage" %}</span><span>{{ ticket.type_dommage|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Type de produit" %}</span><span>{{ ticket.type_produit|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Type de Compensation" %}</span><span>{{ ticket.type_compensation|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Montant du dedommage-ment" %}</span><span>{{ ticket.montant_dedommagement|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Sujet ADS (interne)" %}</span><span>{{ ticket.sujet_ads_interne|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Numéro de lot" %}</span><span>{{ ticket.numero_lot|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Code de production" %}</span><span>{{ ticket.code_production|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+
+    <!-- Web-to-case -->
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>Web-to-case</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Préférence de communication" %}</span><span>{{ ticket.preference_communication|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Magasin" %}</span><span>{{ ticket.magasin|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row"><span class="field-label">{% trans "Instructions spéciales" %}</span><span>{{ ticket.instructions_speciales|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Est-ce un contrat en livraison (interne)" %}</span><input type="checkbox" {% if ticket.contrat_livraison_interne %}checked{% endif %}><i class="bi bi-exclamation-circle text-danger"></i></div>
+      </div>
+    </div>
+
+    <!-- Web Information -->
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "Web Information" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nom Web" %}</span><span>{{ ticket.nom_web|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Téléphone Web" %}</span><span>{{ ticket.telephone_web|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Prénom du client" %}</span><span>{{ ticket.prenom_client|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nom du client" %}</span><span>{{ ticket.nom_client|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nom du contact" %}</span><a href="#" class="field-link">{% if ticket.contact %}{{ ticket.contact.nom_complet }}{% else %}—{% endif %}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "N° de téléphone du contact" %}</span><span>{{ ticket.telephone_client|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Adresse e-mail du contact" %}</span><a href="#" class="field-link">{% if ticket.contact %}{{ ticket.contact.adresse_email }}{% else %}—{% endif %}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "E-mail Web" %}</span><a href="#" class="field-link">{{ ticket.courriel_client|default:"—" }}</a><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nom complet du client" %}</span><span>{{ ticket.nom_complet_client|default:"—" }}</span><i class="bi bi-exclamation-circle text-danger"></i><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Courriel du client" %}</span><span>{{ ticket.courriel_client|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label"># {% trans "Téléphone du client" %}</span><span>{{ ticket.telephone_client|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+
+    <!-- SLA -->
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>SLA</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Arrêté" %}</span><input type="checkbox" {% if ticket.arrete %}checked{% endif %}></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Arrêté depuis" %}</span><span>{{ ticket.arrete_depuis|default:"—" }}</span></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nom de l'autorisation" %}</span><a href="#" class="field-link">{{ ticket.nom_autorisation_sla|default:"—" }}</a></div>
+      </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "System Information" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nombre total de produits défectueux" %}</span><span>{{ ticket.nombre_total_produits_defectueux }}</span></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Date/Heure d'ouverture" %}</span><span>{% if ticket.date_ouverture %}{{ ticket.date_ouverture|date:"Y-m-d H:i" }}{% else %}—{% endif %}</span></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Solution Dernière modification par" %}</span><a href="#" class="field-link">{{ ticket.solution_derniere_modification_par|default:"—" }}</a></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Courriel envoyé à" %}</span><a href="#" class="field-link">{{ ticket.courriel_envoye_a|default:"—" }}</a></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Créé par" %}</span><span>{{ ticket.cree_par|default:"—" }}</span></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Type de besoin" %}</span><span>{{ ticket.type_besoin|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Dernière file d'attente" %}</span><span>{{ ticket.derniere_file_attente|default:"—" }}</span></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Nombre de produits défectueux ouverts" %}</span><span>{{ ticket.nombre_produits_defectueux_ouverts }}</span></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Date/Heure de fermeture" %}</span><span>{% if ticket.date_fermeture %}{{ ticket.date_fermeture|date:"Y-m-d H:i" }}{% else %}—{% endif %}</span></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Depuis le Web" %}</span><span>{% if ticket.depuis_le_web %}{% trans "Oui" %}{% else %}{% trans "Non" %}{% endif %}</span></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Fermeture lors de la création" %}</span><input type="checkbox" {% if ticket.fermeture_lors_creation %}checked{% endif %}></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Langue" %}</span><span>{{ ticket.langue }}</span><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Columna derecha -->
+  <div class="col-lg-3">
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "Jalons" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="small">{% trans "First Response to Customer" %}</div>
+        <div class="small text-muted">{% trans "Il reste 2 jours, 11 hr, 46 min, 58 sec" %}</div>
+        <div class="progress rounded-pill my-1" style="height: 6px;"><div class="progress-bar bg-warning" style="width: 60%;"></div></div>
+        <a href="#" class="small">{% trans "Afficher plus" %}</a>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-2">
+      <li class="nav-item"><a class="nav-link active" href="#">Case</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">Knowledge</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">Tracker</a></li>
+    </ul>
+
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+        <span><i class="bi bi-journal-text me-1"></i> {% trans "Notes" %} (0)</span>
+        <i class="bi bi-chevron-down text-muted"></i>
+      </div>
+    </div>
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+        <span><i class="bi bi-briefcase me-1"></i> {% trans "Child Case" %} (0)</span>
+        <i class="bi bi-chevron-down text-muted"></i>
+      </div>
+    </div>
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+        <span><i class="bi bi-box-seam me-1"></i> {% trans "Produit Défectueux" %} (1)</span>
+        <i class="bi bi-chevron-down text-muted"></i>
+      </div>
+      <div class="card-body py-2">
+        <div class="field-row"><a href="#" class="field-link">015356</a></div>
+        <div class="field-row"><span class="field-label">{% trans "Statut" %}:</span> {% trans "Nouveau" %}</div>
+        <div class="field-row"><span class="field-label">{% trans "Numéro ADS" %}:</span> —</div>
+        <div class="field-row"><span class="field-label">{% trans "Type de produit" %}:</span> {% trans "Meuble" %}</div>
+        <a href="#" class="small">{% trans "Afficher tout" %}</a>
+      </div>
+    </div>
+
+    <div class="card card-section mb-3">
+      <div class="card-header bg-white py-2"><strong>{% trans "Solution" %}</strong></div>
+      <div class="card-body py-2">
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Numéro d'ADS" %}</span><span>{{ ticket.numero_ads|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Solution" %}</span><span>{{ ticket.solution|default:"—" }}</span><i class="bi bi-exclamation-circle text-danger"></i><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Admissibilité de la requête" %}</span><span>{{ ticket.information_additionnelle|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+        <div class="field-row d-flex justify-content-between"><span class="field-label">{% trans "Information Additionnelle" %}</span><span>{{ ticket.information_additionnelle|default:"—" }}</span><i class="bi bi-pencil small text-muted"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
