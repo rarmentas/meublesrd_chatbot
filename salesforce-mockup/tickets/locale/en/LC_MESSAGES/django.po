@@ -1,0 +1,374 @@
+# English translations for Meubles RD mockup (source: French)
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language: en\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Requêtes"
+msgstr "Cases"
+
+msgid "Recherchez..."
+msgstr "Search..."
+
+msgid "Numéro"
+msgstr "Number"
+
+msgid "Objet"
+msgstr "Subject"
+
+msgid "Statut"
+msgstr "Status"
+
+msgid "Priorité"
+msgstr "Priority"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Date d'ouverture"
+msgstr "Open date"
+
+msgid "Voir"
+msgstr "View"
+
+msgid "Aucune requête. Ajoutez des exemples depuis l'admin Django."
+msgstr "No cases. Add sample data from Django admin."
+
+msgid "Requête"
+msgstr "Case"
+
+msgid "Détails de: Requête"
+msgstr "Case details"
+
+msgid "Numéro de la requête"
+msgstr "Case number"
+
+msgid "Propriétaire de la requête"
+msgstr "Case owner"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Détails de: Contact"
+msgstr "Contact details"
+
+msgid "Nom complet"
+msgstr "Full name"
+
+msgid "Adresse e-mail"
+msgstr "Email address"
+
+msgid "Nom du compte"
+msgstr "Account name"
+
+msgid "Téléphone mobile"
+msgstr "Mobile phone"
+
+msgid "Téléphone"
+msgstr "Phone"
+
+msgid "Requêtes de l'élément parent Contact"
+msgstr "Parent Contact cases"
+
+msgid "Afficher tout"
+msgstr "Show all"
+
+msgid "Modifier"
+msgstr "Edit"
+
+msgid "Modifier le propriétaire"
+msgstr "Change owner"
+
+msgid "Nouvelle requête enfant"
+msgstr "New child case"
+
+msgid "Classification"
+msgstr "Classification"
+
+msgid "Sous-sujet"
+msgstr "Sub-subject"
+
+msgid "Requête principale"
+msgstr "Parent case"
+
+msgid "Origine"
+msgstr "Origin"
+
+msgid "Nouveau"
+msgstr "New"
+
+msgid "En traitement"
+msgstr "In progress"
+
+msgid "En attente du client"
+msgstr "Waiting on customer"
+
+msgid "En suspens"
+msgstr "On hold"
+
+msgid "Fermé"
+msgstr "Closed"
+
+msgid "Marquer Statut comme terminé(e)"
+msgstr "Mark status as complete"
+
+msgid "Champs clés"
+msgstr "Key fields"
+
+msgid "Type de la requête du client (Interne)"
+msgstr "Customer request type (Internal)"
+
+msgid "Numéro du contrat d'achat"
+msgstr "Purchase contract number"
+
+msgid "Fil"
+msgstr "Feed"
+
+msgid "Détails"
+msgstr "Details"
+
+msgid "Cartes RD"
+msgstr "RD Cards"
+
+msgid "Associé"
+msgstr "Related"
+
+msgid "Case Information"
+msgstr "Case Information"
+
+msgid "Magasin"
+msgstr "Store"
+
+msgid "Nom du contact"
+msgstr "Contact name"
+
+msgid "CC du courriel"
+msgstr "Email CC"
+
+msgid "Origine de la requête"
+msgstr "Case origin"
+
+msgid "Suiveur"
+msgstr "Follower"
+
+msgid "Description Information"
+msgstr "Description Information"
+
+msgid "Envoyer un courriel au contact ?"
+msgstr "Send email to contact?"
+
+msgid "Commentaires internes"
+msgstr "Internal comments"
+
+msgid "Modification SMS"
+msgstr "SMS modification"
+
+msgid "Category"
+msgstr "Category"
+
+msgid "Sujet livraison (interne)"
+msgstr "Delivery subject (internal)"
+
+msgid "Sujet ADS (interne)"
+msgstr "ADS subject (internal)"
+
+msgid "Avis formel"
+msgstr "Formal notice"
+
+msgid "Manufacturier"
+msgstr "Manufacturer"
+
+msgid "Code de produit"
+msgstr "Product code"
+
+msgid "Type de produit"
+msgstr "Product type"
+
+msgid "No de série de l'appareil"
+msgstr "Device serial number"
+
+msgid "Type d'achat"
+msgstr "Purchase type"
+
+msgid "No de la requête à suivre"
+msgstr "Case number to follow"
+
+msgid "Delivery Information"
+msgstr "Delivery Information"
+
+msgid "Type de réception"
+msgstr "Reception type"
+
+msgid "Région de livraison"
+msgstr "Delivery region"
+
+msgid "No du compte client Meublex"
+msgstr "Meublex customer account number"
+
+msgid "Date de livraison"
+msgstr "Delivery date"
+
+msgid "Ajustement contrat +1/-1"
+msgstr "Contract adjustment +1/-1"
+
+msgid "Capacité de cubage"
+msgstr "Cubic capacity"
+
+msgid "Plage horaire désirée"
+msgstr "Desired time slot"
+
+msgid "Changement sur contrat bloqué"
+msgstr "Contract change blocked"
+
+msgid "Instructions spéciales"
+msgstr "Special instructions"
+
+msgid "ADS Information"
+msgstr "ADS Information"
+
+msgid "Numéro d'ADS"
+msgstr "ADS number"
+
+msgid "Solution"
+msgstr "Solution"
+
+msgid "Information Additionnelle"
+msgstr "Additional information"
+
+msgid "Type de dommage"
+msgstr "Damage type"
+
+msgid "Type de Compensation"
+msgstr "Compensation type"
+
+msgid "Montant du dedommage-ment"
+msgstr "Compensation amount"
+
+msgid "Numéro de lot"
+msgstr "Lot number"
+
+msgid "Code de production"
+msgstr "Production code"
+
+msgid "Préférence de communication"
+msgstr "Communication preference"
+
+msgid "Est-ce un contrat en livraison (interne)"
+msgstr "Is this a delivery contract (internal)"
+
+msgid "Web Information"
+msgstr "Web Information"
+
+msgid "Nom Web"
+msgstr "Web name"
+
+msgid "Téléphone Web"
+msgstr "Web phone"
+
+msgid "Prénom du client"
+msgstr "Customer first name"
+
+msgid "Nom du client"
+msgstr "Customer last name"
+
+msgid "N° de téléphone du contact"
+msgstr "Contact phone number"
+
+msgid "E-mail Web"
+msgstr "Web email"
+
+msgid "Nom complet du client"
+msgstr "Customer full name"
+
+msgid "Courriel du client"
+msgstr "Customer email"
+
+msgid "Téléphone du client"
+msgstr "Customer phone"
+
+msgid "Arrêté"
+msgstr "Stopped"
+
+msgid "Arrêté depuis"
+msgstr "Stopped since"
+
+msgid "Nom de l'autorisation"
+msgstr "Authorization name"
+
+msgid "System Information"
+msgstr "System Information"
+
+msgid "Nombre total de produits défectueux"
+msgstr "Total defective products"
+
+msgid "Solution Dernière modification par"
+msgstr "Solution last modified by"
+
+msgid "Courriel envoyé à"
+msgstr "Email sent to"
+
+msgid "Créé par"
+msgstr "Created by"
+
+msgid "Type de besoin"
+msgstr "Need type"
+
+msgid "Dernière file d'attente"
+msgstr "Last queue"
+
+msgid "Nombre de produits défectueux ouverts"
+msgstr "Open defective products count"
+
+msgid "Date/Heure de fermeture"
+msgstr "Close date/time"
+
+msgid "Depuis le Web"
+msgstr "From Web"
+
+msgid "Fermeture lors de la création"
+msgstr "Close on creation"
+
+msgid "Langue"
+msgstr "Language"
+
+msgid "Jalons"
+msgstr "Milestones"
+
+msgid "First Response to Customer"
+msgstr "First Response to Customer"
+
+msgid "Il reste 2 jours, 11 hr, 46 min, 58 sec"
+msgstr "2 days, 11 hr, 46 min, 58 sec remaining"
+
+msgid "Afficher plus"
+msgstr "Show more"
+
+msgid "Notes"
+msgstr "Notes"
+
+msgid "Child Case"
+msgstr "Child Case"
+
+msgid "Produit Défectueux"
+msgstr "Defective Product"
+
+msgid "Meuble"
+msgstr "Furniture"
+
+msgid "Admissibilité de la requête"
+msgstr "Case eligibility"
+
+msgid "Oui"
+msgstr "Yes"
+
+msgid "Non"
+msgstr "No"
