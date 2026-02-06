@@ -43,15 +43,26 @@
           <input class="form-control form-control-sm" type="search" placeholder="{% trans 'Recherchez...' %}" style="width: 220px;">
           <button class="btn btn-outline-secondary btn-sm ms-1" type="submit"><i class="bi bi-search"></i></button>
         </form>
-        <form action="{% url 'set_language' %}" method="post" class="d-inline" id="lang-form">
-          {% csrf_token %}
-          <input type="hidden" name="next" value="{{ request.get_full_path }}">
-          <div class="btn-group btn-group-sm">
-            <button type="submit" name="language" value="fr" class="btn {% if LANGUAGE_CODE == 'fr' %}btn-meubles{% else %}btn-outline-secondary{% endif %}">FR</button>
-            <button type="submit" name="language" value="en" class="btn {% if LANGUAGE_CODE == 'en' %}btn-meubles{% else %}btn-outline-secondary{% endif %}">EN</button>
-          </div>
-        </form>
-        <span class="ms-2"><i class="bi bi-gear"></i></span>
+        <div class="btn-group btn-group-sm">
+          {% if LANGUAGE_CODE == 'fr' %}
+            <span class="btn btn-meubles">FR</span>
+            <form action="{% url 'set_language' %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="language" value="en">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="btn btn-outline-secondary">EN</button>
+            </form>
+          {% else %}
+            <form action="{% url 'set_language' %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="language" value="fr">
+              <input type="hidden" name="next" value="/">
+              <button type="submit" class="btn btn-outline-secondary">FR</button>
+            </form>
+            <span class="btn btn-meubles">EN</span>
+          {% endif %}
+        </div>
+        <a href="{% url 'admin:index' %}" class="ms-2 text-dark" title="Admin"><i class="bi bi-gear"></i></a>
         <span class="ms-2"><i class="bi bi-bell"></i></span>
       </div>
     </div>

@@ -74,13 +74,22 @@ python manage.py load_sample_tickets --clear
 
 ## 5. Traducciones (FR/EN)
 
-Por defecto las cadenas están en francés. Las traducciones al inglés están en `tickets/locale/en/LC_MESSAGES/django.po`. Para que el inglés se muestre bien, compila las traducciones (.po → .mo):
+Por defecto las cadenas están en francés. Las traducciones al inglés están en `tickets/locale/en/LC_MESSAGES/django.po`. Para que el inglés se muestre bien, compila las traducciones (.po → .mo).
+
+**Opción A** (si tienes GNU gettext instalado):
 
 ```powershell
 python manage.py compilemessages
 ```
 
-Sin este paso el sitio funciona en francés; en inglés, algunas etiquetas pueden seguir en francés hasta que ejecutes `compilemessages`.
+**Opción B** (Windows sin gettext; usa Babel en Python):
+
+```powershell
+pip install -r requirements.txt
+python manage.py compilemessages_python
+```
+
+Sin este paso el sitio funciona en francés; en inglés, algunas etiquetas pueden seguir en francés hasta que compiles los mensajes.
 
 ---
 
@@ -113,5 +122,5 @@ python manage.py createsuperuser
 | Instalar deps       | `pip install -r requirements.txt`             |
 | Migraciones         | `python manage.py migrate`                    |
 | Datos de demo       | `python manage.py load_sample_tickets`       |
-| Traducciones        | `python manage.py compilemessages`           |
+| Traducciones        | `python manage.py compilemessages_python`   |
 | Arrancar servidor   | `python manage.py runserver`                  |

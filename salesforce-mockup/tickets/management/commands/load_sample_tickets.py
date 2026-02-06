@@ -88,7 +88,6 @@ class Command(BaseCommand):
                 magasin='01 - Québec',
                 classification='Livraison',
                 sous_sujet='Retard',
-                statut='en_traitement',
             ),
             Requete(
                 numero='00430580',
