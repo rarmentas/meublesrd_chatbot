@@ -15,6 +15,8 @@
     .nav-tabs .nav-link.active { color: var(--meubles-red); font-weight: 600; border-bottom: 2px solid var(--meubles-red); background: transparent; }
     .btn-meubles { background: var(--meubles-red); color: #fff; }
     .btn-meubles:hover { background: #a00; color: #fff; }
+    .btn-group-lang .btn, .btn-group-lang .btn-meubles { min-width: 2.25rem; font-size: 0.8125rem; line-height: 1.5; padding: 0.25rem 0.5rem; }
+    .btn-group-lang form { display: inline; }
     .card-section { border-radius: 8px; border: 1px solid #dee2e6; }
     .field-row { border-bottom: 1px solid #eee; padding: .35rem 0; }
     .field-row:last-child { border-bottom: none; }
@@ -43,23 +45,23 @@
           <input class="form-control form-control-sm" type="search" placeholder="{% trans 'Recherchez...' %}" style="width: 220px;">
           <button class="btn btn-outline-secondary btn-sm ms-1" type="submit"><i class="bi bi-search"></i></button>
         </form>
-        <div class="btn-group btn-group-sm">
+        <div class="btn-group btn-group-sm btn-group-lang">
           {% if LANGUAGE_CODE == 'fr' %}
-            <span class="btn btn-meubles">FR</span>
+            <span class="btn btn-sm btn-meubles">FR</span>
             <form action="{% url 'set_language' %}" method="post" class="d-inline">
               {% csrf_token %}
               <input type="hidden" name="language" value="en">
               <input type="hidden" name="next" value="{{ request.get_full_path }}">
-              <button type="submit" class="btn btn-outline-secondary">EN</button>
+              <button type="submit" class="btn btn-sm btn-outline-secondary">EN</button>
             </form>
           {% else %}
             <form action="{% url 'set_language' %}" method="post" class="d-inline">
               {% csrf_token %}
               <input type="hidden" name="language" value="fr">
               <input type="hidden" name="next" value="/">
-              <button type="submit" class="btn btn-outline-secondary">FR</button>
+              <button type="submit" class="btn btn-sm btn-outline-secondary">FR</button>
             </form>
-            <span class="btn btn-meubles">EN</span>
+            <span class="btn btn-sm btn-meubles">EN</span>
           {% endif %}
         </div>
         <a href="{% url 'admin:index' %}" class="ms-2 text-dark" title="Admin"><i class="bi bi-gear"></i></a>
