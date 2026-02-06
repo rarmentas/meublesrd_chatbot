@@ -17,7 +17,7 @@ from langchain_openai import OpenAIEmbeddings
 
 # Load environment variables from parent directory's .env file
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR.parent / '.env')
+load_dotenv(BASE_DIR / '.env')
 
 # Initialize embeddings (same as ingestion.py)
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
