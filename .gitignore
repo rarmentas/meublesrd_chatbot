@@ -6,7 +6,16 @@
 *.pem
 *credentials*
 *secret*
-
+#Database
+*.db
+/salesforce-mockup/*.sqlite3
+*.sqlite3
+*.sqlite
+*.sqlite3.db
+*.sqlite3.db.sqlite3
+*.sqlite3.db.sqlite3.db
+*.sqlite3.db.sqlite3.db.sqlite3
+*.sqlite3.db.sqlite3.db.sqlite3.db
 # --- Sistema / IDE ---
 .DS_Store
 Thumbs.db
@@ -47,6 +56,9 @@ build/
 # --- Extensión Chrome: artefactos de empaquetado ---
 *.crx
 *.zip
+
+# --- Django: estáticos recolectados (generado por collectstatic) ---
+salesforce-mockup/staticfiles/
 
 # --- Datos generados / outputs (mantén en git solo "raw" y docs necesarios) ---
 # Nota: NO se ignora `data/raw/` para conservar SOPs fuente versionados.
