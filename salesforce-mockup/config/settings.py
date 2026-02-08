@@ -13,6 +13,12 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
 # En modo dev (DEBUG=True) aceptar cualquier host; en producción definir solo los dominios permitidos.
 ALLOWED_HOSTS = ['*'] if DEBUG else [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
 
+# Orígenes permitidos para la verificación CSRF (requerido cuando se accede por HTTPS/proxy).
+# Variable de entorno opcional: CSRF_TRUSTED_ORIGINS=https://a.com,https://b.com
+_default_csrf_origins = ['https://mockup.gac.asware.com.mx']
+_csrf_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_env.split(',') if o.strip()] or _default_csrf_origins
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -87,3 +93,8 @@ STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Login: mismas credenciales que /admin/
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = 'login'
