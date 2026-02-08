@@ -1,2 +1,4 @@
 Django>=4.2,<5.0
 Babel>=2.12,<3.0
+uvicorn[standard]>=0.24,<0.32
+whitenoise>=6.6,<7

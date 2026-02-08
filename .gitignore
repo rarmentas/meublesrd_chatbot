@@ -57,6 +57,9 @@ build/
 *.crx
 *.zip
 
+# --- Django: estáticos recolectados (generado por collectstatic) ---
+salesforce-mockup/staticfiles/
+
 # --- Datos generados / outputs (mantén en git solo "raw" y docs necesarios) ---
 # Nota: NO se ignora `data/raw/` para conservar SOPs fuente versionados.
 data/interim/
