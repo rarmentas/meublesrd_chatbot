@@ -6,8 +6,21 @@ import re
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from drf_spectacular.utils import extend_schema
 
 from .rag_service import run_llm, analyze_claim, evaluate_agent_feedback, evaluate_agent_feedback_optimized
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+
+from .serializers import (
+    ChatRequestSerializer,
+    ChatResponseSerializer,
+    ChatErrorSerializer,
+    HealthResponseSerializer,
+    TokenRequestSerializer,
+    TokenResponseSerializer,
+)
 
 
 # Section patterns to extract from content if metadata doesn't have section title
@@ -35,16 +48,68 @@ def extract_section_from_content(content: str) -> str:
     return None
 
 
-class HealthCheckView(APIView):
-    """Health check endpoint."""
+class ObtainTokenView(APIView):
+    """Devuelve un token para el usuario si username/password son correctos."""
 
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="Obtener token",
+        description="Envía usuario y contraseña. Devuelve un token para usar en "
+                    "el header: Authorization: Token &lt;token&gt;. Usa los mismos usuarios que Django Admin.",
+        request=TokenRequestSerializer,
+        responses={
+            200: TokenResponseSerializer,
+            400: ChatErrorSerializer,
+        },
+    )
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        if not username or not password:
+            return Response(
+                {"error": "username y password son obligatorios"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            return Response(
+                {"error": "Credenciales inválidas"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({"token": token.key})
+
+
+class HealthCheckView(APIView):
+    """Health check endpoint (público, sin autenticación)."""
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="Health check",
+        description="Comprueba que el servicio esté en marcha. No requiere autenticación.",
+        responses={200: HealthResponseSerializer},
+    )
     def get(self, request):
         return Response({"status": "healthy"})
 
 
 class ChatView(APIView):
-    """Chat endpoint for processing queries."""
+    """Chat endpoint for processing queries (requiere autenticación por token)."""
 
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Enviar mensaje al chatbot",
+        description="Envía una pregunta al chatbot RAG y devuelve la respuesta con las fuentes usadas.",
+        request=ChatRequestSerializer,
+        responses={
+            200: ChatResponseSerializer,
+            400: ChatErrorSerializer,
+            500: ChatErrorSerializer,
+        },
+    )
     def post(self, request):
         """Process a chat query and return the response with sources."""
         query = request.data.get('query')

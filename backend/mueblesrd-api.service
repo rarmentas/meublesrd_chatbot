@@ -1,0 +1,26 @@
+# Systemd unit para Meubles RD API (backend uvicorn).
+# Instalación (como root o con sudo):
+#   sudo cp /home/rarme/meublesrd_chatbot/backend/mueblesrd-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable mueblesrd-api
+#   sudo systemctl start mueblesrd-api
+# Ver logs: sudo journalctl -u mueblesrd-api -f
+
+[Unit]
+Description=Meubles RD API backend (uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=rarme
+Group=rarme
+WorkingDirectory=/home/rarme/meublesrd_chatbot/backend
+ExecStart=/home/rarme/meublesrd_chatbot/backend/start-prod.sh
+Restart=always
+RestartSec=3
+# Variables de entorno opcionales (descomenta y ajusta si hace falta)
+# Environment="ALLOWED_HOSTS=localhost,127.0.0.1,tudominio.com"
+# Environment="UVICORN_PORT=8002"
+
+[Install]
+WantedBy=multi-user.target
