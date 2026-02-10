@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Requêtes" %} – MeublesRD Service{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h5 mb-0">{% trans "Requêtes" %}</h1>
+</div>
+
+<div class="card card-section">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>{% trans "Numéro" %}</th>
+            <th>{% trans "Objet" %}</th>
+            <th>{% trans "Statut" %}</th>
+            <th>{% trans "Priorité" %}</th>
+            <th>{% trans "Contact" %}</th>
+            <th>{% trans "Date d'ouverture" %}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ticket in tickets %}
+          <tr>
+            <td><strong>{{ ticket.numero }}</strong></td>
+            <td>{{ ticket.objet|truncatewords:8 }}</td>
+            <td><span class="badge bg-secondary">{{ ticket.get_statut_display }}</span></td>
+            <td>{{ ticket.get_priorite_display }}</td>
+            <td>{% if ticket.contact %}{{ ticket.contact.nom_complet }}{% else %}—{% endif %}</td>
+            <td>{% if ticket.date_ouverture %}{{ ticket.date_ouverture|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+            <td>
+              <a href="{% url 'tickets:detail' ticket.numero %}" class="btn btn-sm btn-outline-primary">{% trans "Voir" %}</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">{% trans "Aucune requête. Ajoutez des exemples depuis l’admin Django." %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
