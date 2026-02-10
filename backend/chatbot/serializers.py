@@ -32,3 +32,16 @@ class HealthResponseSerializer(serializers.Serializer):
     """Respuesta de GET /api/health/."""
 
     status = serializers.CharField(help_text="Estado del servicio, p. ej. 'healthy'.")
+
+
+class TokenRequestSerializer(serializers.Serializer):
+    """Cuerpo para POST /api/auth/token/ (obtener token)."""
+
+    username = serializers.CharField(help_text="Nombre de usuario Django.")
+    password = serializers.CharField(style={'input_type': 'password'}, help_text="Contraseña.")
+
+
+class TokenResponseSerializer(serializers.Serializer):
+    """Respuesta de POST /api/auth/token/."""
+
+    token = serializers.CharField(help_text="Token para usar en header: Authorization: Token <token>.")

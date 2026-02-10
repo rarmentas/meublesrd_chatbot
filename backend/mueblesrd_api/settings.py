@@ -24,18 +24,28 @@ ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'drf_spectacular',
     'chatbot',
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'mueblesrd_api.urls'
@@ -49,6 +59,8 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
             ],
         },
     },
@@ -56,11 +68,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mueblesrd_api.wsgi.application'
 
-# Database - not needed for this API-only project
-DATABASES = {}
+# Database (needed for auth, admin and tokens)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
-# Password validation - not needed for this API-only project
-AUTH_PASSWORD_VALIDATORS = []
+# Auth (login URL for redirects; admin uses it)
+LOGIN_URL = '/admin/login/'
+
+# Password validation
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -87,6 +112,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'UNAUTHENTICATED_USER': None,
 }
@@ -94,7 +126,19 @@ REST_FRAMEWORK = {
 # drf-spectacular (OpenAPI / Swagger)
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Muebles RD Chatbot API',
-    'DESCRIPTION': 'API del chatbot de Muebles RD (consulta RAG y health check).',
+    'DESCRIPTION': 'API del chatbot de Muebles RD (consulta RAG y health check). Autenticación por token.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SECURITY': [{'TokenAuth': []}],
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'TokenAuth': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'Authorization',
+                'description': 'Token de DRF. Valor: "Token &lt;tu_token&gt;" (sin comillas).',
+            }
+        }
+    },
 }

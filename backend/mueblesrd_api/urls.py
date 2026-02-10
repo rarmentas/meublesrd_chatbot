@@ -2,6 +2,7 @@
 URL configuration for mueblesrd_api project.
 """
 
+from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -10,6 +11,7 @@ from drf_spectacular.views import (
 )
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('api/', include('chatbot.urls')),
     # OpenAPI schema (JSON)
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
