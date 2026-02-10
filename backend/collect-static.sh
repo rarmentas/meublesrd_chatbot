@@ -18,3 +18,4 @@ export DJANGO_SETTINGS_MODULE=mueblesrd_api.settings
 python manage.py collectstatic --noinput
 
 echo "Collectstatic terminado. Archivos en: $SCRIPT_DIR/staticfiles"
+echo "WhiteNoise sirve estos estáticos en producción (middleware en settings)."

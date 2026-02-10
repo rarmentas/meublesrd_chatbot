@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -112,9 +113,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
+    # Token y Basic: en Swagger puedes usar "Authorize" con user/pass (Basic) o con Token.
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -126,13 +128,19 @@ REST_FRAMEWORK = {
 # drf-spectacular (OpenAPI / Swagger)
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Muebles RD Chatbot API',
-    'DESCRIPTION': 'API del chatbot de Muebles RD (consulta RAG y health check). Autenticación por token.',
+    'DESCRIPTION': 'API del chatbot de Muebles RD (consulta RAG y health check). Autenticación por token o usuario/contraseña (Basic).',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
-    'SECURITY': [{'TokenAuth': []}],
+    # Permite usar en Swagger: Basic (user/pass) o Token
+    'SECURITY': [{'basicAuth': []}, {'TokenAuth': []}],
     'APPEND_COMPONENTS': {
         'securitySchemes': {
+            'basicAuth': {
+                'type': 'http',
+                'scheme': 'basic',
+                'description': 'Usuario y contraseña de Django (los mismos que en /admin/).',
+            },
             'TokenAuth': {
                 'type': 'apiKey',
                 'in': 'header',
