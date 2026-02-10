@@ -6,8 +6,15 @@ import re
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from drf_spectacular.utils import extend_schema
 
 from .rag_service import run_llm
+from .serializers import (
+    ChatRequestSerializer,
+    ChatResponseSerializer,
+    ChatErrorSerializer,
+    HealthResponseSerializer,
+)
 
 
 # Section patterns to extract from content if metadata doesn't have section title
@@ -38,6 +45,11 @@ def extract_section_from_content(content: str) -> str:
 class HealthCheckView(APIView):
     """Health check endpoint."""
 
+    @extend_schema(
+        summary="Health check",
+        description="Comprueba que el servicio esté en marcha.",
+        responses={200: HealthResponseSerializer},
+    )
     def get(self, request):
         return Response({"status": "healthy"})
 
@@ -45,6 +57,16 @@ class HealthCheckView(APIView):
 class ChatView(APIView):
     """Chat endpoint for processing queries."""
 
+    @extend_schema(
+        summary="Enviar mensaje al chatbot",
+        description="Envía una pregunta al chatbot RAG y devuelve la respuesta con las fuentes usadas.",
+        request=ChatRequestSerializer,
+        responses={
+            200: ChatResponseSerializer,
+            400: ChatErrorSerializer,
+            500: ChatErrorSerializer,
+        },
+    )
     def post(self, request):
         """Process a chat query and return the response with sources."""
         query = request.data.get('query')

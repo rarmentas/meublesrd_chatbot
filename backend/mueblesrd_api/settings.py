@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'drf_spectacular',
     'chatbot',
 ]
 
@@ -86,5 +87,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'UNAUTHENTICATED_USER': None,
+}
+
+# drf-spectacular (OpenAPI / Swagger)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Muebles RD Chatbot API',
+    'DESCRIPTION': 'API del chatbot de Muebles RD (consulta RAG y health check).',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }

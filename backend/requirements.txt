@@ -8,3 +8,4 @@ langchain-pinecone>=0.2
 langchain-community>=0.3
 langsmith>=0.1
 uvicorn[standard]>=0.30
+drf-spectacular>=0.27
