@@ -73,12 +73,12 @@ The API will be available at `http://localhost:8000`.
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DJANGO_SECRET_KEY` | Django secret key for cryptographic signing | Yes (production) |
-| `DEBUG` | Enable debug mode (`True`/`False`) | No (defaults to `True`) |
-| `OPENAI_API_KEY` | OpenAI API key for embeddings and LLM | Yes |
-| `PINECONE_API_KEY` | Pinecone API key for vector store | Yes |
+| Variable            | Description                                 | Required                |
+| ------------------- | ------------------------------------------- | ----------------------- |
+| `DJANGO_SECRET_KEY` | Django secret key for cryptographic signing | Yes (production)        |
+| `DEBUG`             | Enable debug mode (`True`/`False`)          | No (defaults to `True`) |
+| `OPENAI_API_KEY`    | OpenAI API key for embeddings and LLM       | Yes                     |
+| `PINECONE_API_KEY`  | Pinecone API key for vector store           | Yes                     |
 
 ## API Reference
 
@@ -99,6 +99,7 @@ GET /api/health/
 ```
 
 **Status Codes:**
+
 - `200 OK` - Service is healthy
 
 ---
@@ -125,28 +126,26 @@ Content-Type: application/json
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `query` | string | Yes | The customer service question |
+| Field   | Type   | Required | Description                   |
+| ------- | ------ | -------- | ----------------------------- |
+| `query` | string | Yes      | The customer service question |
 
 **Response:**
 
 ```json
 {
   "answer": "To process a customer return request, follow these steps: 1. Verify the customer's purchase in Salesforce...",
-  "sources": [
-    "5.1 Return Procedures",
-    "3. Customer Verification"
-  ]
+  "sources": ["5.1 Return Procedures", "3. Customer Verification"]
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `answer` | string | Generated response based on company policies |
-| `sources` | array | List of policy sections referenced in the answer |
+| Field     | Type   | Description                                      |
+| --------- | ------ | ------------------------------------------------ |
+| `answer`  | string | Generated response based on company policies     |
+| `sources` | array  | List of policy sections referenced in the answer |
 
 **Status Codes:**
+
 - `200 OK` - Query processed successfully
 - `400 Bad Request` - Missing or invalid query parameter
 - `500 Internal Server Error` - Processing error
@@ -192,19 +191,19 @@ print(f"Sources: {data['sources']}")
 ### JavaScript (fetch)
 
 ```javascript
-const response = await fetch('http://localhost:8000/api/chat/', {
-  method: 'POST',
+const response = await fetch("http://localhost:8000/api/chat/", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    query: 'How do I check delivery deadlines?'
+    query: "How do I check delivery deadlines?",
   }),
 });
 
 const data = await response.json();
-console.log('Answer:', data.answer);
-console.log('Sources:', data.sources);
+console.log("Answer:", data.answer);
+console.log("Sources:", data.sources);
 ```
 
 ## Architecture
@@ -256,13 +255,13 @@ For production deployment:
 
 ## Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| Django | Web framework |
-| djangorestframework | REST API framework |
-| django-cors-headers | CORS support |
-| python-dotenv | Environment variable loading |
-| langchain | AI orchestration framework |
-| langchain-openai | OpenAI integration |
-| langchain-pinecone | Pinecone vector store |
-| langsmith | LangChain tracing/monitoring |
+| Package             | Purpose                      |
+| ------------------- | ---------------------------- |
+| Django              | Web framework                |
+| djangorestframework | REST API framework           |
+| django-cors-headers | CORS support                 |
+| python-dotenv       | Environment variable loading |
+| langchain           | AI orchestration framework   |
+| langchain-openai    | OpenAI integration           |
+| langchain-pinecone  | Pinecone vector store        |
+| langsmith           | LangChain tracing/monitoring |
