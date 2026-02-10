@@ -5,9 +5,9 @@ API views for MueblesRD chatbot.
 import re
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, serializers
 
-from .rag_service import run_llm
+from .rag_service import run_llm, analyze_claim, evaluate_agent_feedback, evaluate_agent_feedback_optimized
 
 
 # Section patterns to extract from content if metadata doesn't have section title
@@ -86,6 +86,154 @@ class ChatView(APIView):
                 "sources": sources
             })
 
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+# ============================================================
+# Claim Analysis Endpoint
+# ============================================================
+
+
+class ClaimAnalysisInputSerializer(serializers.Serializer):
+    """Serializer for claim analysis input validation."""
+
+    REQUEST_TYPE_CHOICES = [
+        ("Modification, Follow-up or Question About an Order in Progress",
+         "Modification, Follow-up or Question About an Order in Progress"),
+        ("Submit a Claim", "Submit a Claim"),
+        ("Follow-up on an Ongoing Claim", "Follow-up on an Ongoing Claim"),
+        ("Out of warranty parts order", "Out of warranty parts order"),
+    ]
+    CLAIM_TYPE_CHOICES = [
+        ("Defective, damaged product(s) or missing part(s)",
+         "Defective, damaged product(s) or missing part(s)"),
+        ("Error or Missing Product", "Error or Missing Product"),
+        ("Home Damage or Delivery Complaint", "Home Damage or Delivery Complaint"),
+        ("ComfoRD Warranty - Mattresses", "ComfoRD Warranty - Mattresses"),
+    ]
+    DAMAGE_TYPE_CHOICES = [
+        ("Aesthetics", "Aesthetics"),
+        ("Mechanical or Structural", "Mechanical or Structural"),
+        ("Missing Part(s)", "Missing Part(s)"),
+    ]
+    PRODUCT_TYPE_CHOICES = [
+        ("Appliances", "Appliances"),
+        ("Barbecue", "Barbecue"),
+        ("Electronics", "Electronics"),
+        ("Mattresses", "Mattresses"),
+        ("Furniture", "Furniture"),
+    ]
+
+    request_type = serializers.ChoiceField(choices=REQUEST_TYPE_CHOICES)
+    claim_type = serializers.ChoiceField(choices=CLAIM_TYPE_CHOICES)
+    multiple_products_damaged = serializers.BooleanField()
+    damage_type = serializers.ChoiceField(choices=DAMAGE_TYPE_CHOICES)
+    delivery_date = serializers.DateField()
+    product_type = serializers.ChoiceField(choices=PRODUCT_TYPE_CHOICES)
+    manufacturer = serializers.CharField(max_length=100)
+    store_of_purchase = serializers.CharField(max_length=100)
+    product_code = serializers.CharField(max_length=50)
+    purchase_confirmation_number = serializers.CharField(max_length=50)
+    description = serializers.CharField(min_length=10, max_length=5000)
+    data_sharing_consent = serializers.BooleanField()
+    has_attachments = serializers.BooleanField()
+
+
+class ClaimAnalysisView(APIView):
+    """POST /api/analyze-claim/ - Analyze customer claim with RAG and tone analysis."""
+
+    def post(self, request):
+        """Analyze a customer claim and return policy recommendations and tone analysis."""
+        serializer = ClaimAnalysisInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"error": "Invalid input", "details": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            claim_data = serializer.validated_data.copy()
+            # Convert date to ISO string for the analyze_claim function
+            claim_data["delivery_date"] = claim_data["delivery_date"].isoformat()
+            result = analyze_claim(claim_data)
+            return Response(result)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+# ============================================================
+# Agent Feedback Endpoint
+# ============================================================
+
+
+class AgentFeedbackInputSerializer(ClaimAnalysisInputSerializer):
+    """Serializer for agent feedback evaluation. Extends claim analysis with verification fields."""
+
+    personal_info_verified = serializers.BooleanField()
+    contract_ownership = serializers.BooleanField()
+    contract_number = serializers.CharField(max_length=100)
+    salesforce_client_number = serializers.CharField(max_length=100)
+    meublex_client_number = serializers.CharField(max_length=100)
+    salesforce_delivery_date = serializers.DateField()
+    meublex_delivery_date = serializers.DateField()
+    claim_date = serializers.DateField()
+    eligible = serializers.BooleanField()
+
+
+class AgentFeedbackView(APIView):
+    """POST /api/agent-feedback-deep/ - Evaluate agent's claim handling across 7 criteria (exhaustive, multi-step agent)."""
+
+    def post(self, request):
+        """Evaluate a store agent's claim handling and return structured feedback."""
+        serializer = AgentFeedbackInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"error": "Invalid input", "details": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            feedback_data = serializer.validated_data.copy()
+            # Convert all date fields to ISO strings
+            feedback_data["delivery_date"] = feedback_data["delivery_date"].isoformat()
+            feedback_data["salesforce_delivery_date"] = feedback_data["salesforce_delivery_date"].isoformat()
+            feedback_data["meublex_delivery_date"] = feedback_data["meublex_delivery_date"].isoformat()
+            feedback_data["claim_date"] = feedback_data["claim_date"].isoformat()
+            result = evaluate_agent_feedback(feedback_data)
+            return Response(result)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class AgentFeedbackOptimizedView(APIView):
+    """POST /api/agent-feedback/ - Optimized: pre-fetched policies + single LLM call."""
+
+    def post(self, request):
+        serializer = AgentFeedbackInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"error": "Invalid input", "details": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            feedback_data = serializer.validated_data.copy()
+            feedback_data["delivery_date"] = feedback_data["delivery_date"].isoformat()
+            feedback_data["salesforce_delivery_date"] = feedback_data["salesforce_delivery_date"].isoformat()
+            feedback_data["meublex_delivery_date"] = feedback_data["meublex_delivery_date"].isoformat()
+            feedback_data["claim_date"] = feedback_data["claim_date"].isoformat()
+            result = evaluate_agent_feedback_optimized(feedback_data)
+            return Response(result)
         except Exception as e:
             return Response(
                 {"error": str(e)},

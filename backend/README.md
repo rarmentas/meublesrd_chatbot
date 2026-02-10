@@ -1,96 +1,108 @@
-# MueblesRD Customer Service Chatbot API
+# MueblesRD Helper - Django Backend API
 
-A Django REST Framework backend implementing a RAG (Retrieval-Augmented Generation) pipeline for MueblesRD's internal customer service operations. This API helps store employees find answers to customer service questions by retrieving relevant company policies and procedures from a vector database.
+API REST para soporte de servicio al cliente de MueblesRD. Utiliza RAG (Retrieval-Augmented Generation) con LangChain, Pinecone y OpenAI para consultar politicas internas, analizar reclamaciones y evaluar el desempeno de agentes de tienda.
 
-## Features
-
-- RAG-powered chatbot using LangChain and OpenAI GPT
-- Vector search with Pinecone for company policy retrieval
-- Source attribution for generated responses
-- Stateless API design (no database required)
-- CORS-enabled for frontend integration
-
-## Project Structure
-
-```
-backend_django/
-├── manage.py                 # Django management utility
-├── requirements.txt          # Python dependencies
-├── mueblesrd_api/            # Main project configuration
-│   ├── settings.py           # Django settings
-│   ├── urls.py               # Root URL configuration
-│   ├── wsgi.py               # WSGI entry point
-│   └── asgi.py               # ASGI entry point
-└── chatbot/                  # Chatbot application
-    ├── urls.py               # App URL routes
-    ├── views.py              # API views
-    └── rag_service.py        # RAG pipeline logic
-```
-
-## Requirements
+## Requisitos
 
 - Python 3.10+
-- OpenAI API key
-- Pinecone API key with `mueblesrd-index` configured
+- Cuentas activas en: OpenAI, Pinecone, LangSmith
 
-## Installation
+## Configuracion
 
-1. **Clone the repository and navigate to the project directory:**
+### 1. Instalar dependencias
 
 ```bash
 cd backend_django
-```
-
-2. **Create and activate a virtual environment:**
-
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. **Install dependencies:**
-
-```bash
 pip install -r requirements.txt
 ```
 
-4. **Create a `.env` file in the project root:**
+### 2. Configurar variables de entorno
+
+Crear un archivo `.env` en la raiz del proyecto (`mueblesrd_helper/.env`):
 
 ```env
-DJANGO_SECRET_KEY=your-secure-secret-key
-DEBUG=False
-OPENAI_API_KEY=your-openai-api-key
-PINECONE_API_KEY=your-pinecone-api-key
+OPENAI_API_KEY=sk-proj-...
+PINECONE_API_KEY=pcsk_...
+LANGSMITH_API_KEY=lsv2_pt_...
+LANGSMITH_PROJECT=Documentation Helper
+LANGSMITH_TRACING=true
 ```
 
-5. **Run the development server:**
+| Variable            | Descripcion                              |
+| ------------------- | ---------------------------------------- |
+| `OPENAI_API_KEY`    | API key de OpenAI (GPT-5.2 + embeddings) |
+| `PINECONE_API_KEY`  | API key de Pinecone (vector store)       |
+| `LANGSMITH_API_KEY` | API key de LangSmith (monitoreo LLM)     |
+| `LANGSMITH_PROJECT` | Nombre del proyecto en LangSmith         |
+| `LANGSMITH_TRACING` | Habilitar tracing (`true`/`false`)       |
+
+### 3. Iniciar el servidor
 
 ```bash
+cd backend_django
 python manage.py runserver
 ```
 
-The API will be available at `http://localhost:8000`.
+El servidor arranca en `http://localhost:8000`. Para un puerto diferente:
 
-## Environment Variables
-
-| Variable            | Description                                 | Required                |
-| ------------------- | ------------------------------------------- | ----------------------- |
-| `DJANGO_SECRET_KEY` | Django secret key for cryptographic signing | Yes (production)        |
-| `DEBUG`             | Enable debug mode (`True`/`False`)          | No (defaults to `True`) |
-| `OPENAI_API_KEY`    | OpenAI API key for embeddings and LLM       | Yes                     |
-| `PINECONE_API_KEY`  | Pinecone API key for vector store           | Yes                     |
-
-## API Reference
-
-### Health Check
-
-Check if the API is running.
-
-```
-GET /api/health/
+```bash
+python manage.py runserver 8080
 ```
 
-**Response:**
+---
+
+## Arquitectura
+
+```
+backend_django/
+├── manage.py
+├── requirements.txt
+├── feedback-agent.txt          # Especificacion de criterios de evaluacion
+├── mueblesrd_api/              # Proyecto Django
+│   ├── settings.py             # Config: CORS, REST Framework, sin BD
+│   ├── urls.py                 # Router principal → /api/
+│   ├── wsgi.py
+│   └── asgi.py
+└── chatbot/                    # App principal
+    ├── urls.py                 # Rutas de endpoints
+    ├── views.py                # Vistas (serializers + API views)
+    └── rag_service.py          # Pipeline RAG (LangChain + Pinecone + OpenAI)
+```
+
+**Servicios externos:**
+
+- **OpenAI** — GPT-5.2 (chat) + text-embedding-3-small (embeddings)
+- **Pinecone** — Vector store (indice: `mueblesrd-index`)
+- **LangSmith** — Tracing y monitoreo de llamadas LLM
+
+**Caracteristicas:**
+
+- API stateless (sin base de datos)
+- CORS habilitado para cualquier origen
+- Solo JSON (entrada y salida)
+- Sin autenticacion (disenado para uso interno)
+
+---
+
+## Mapa de Endpoints
+
+| Metodo | Ruta                        | Descripcion                                                     |
+| ------ | --------------------------- | --------------------------------------------------------------- |
+| `GET`  | `/api/health/`              | Health check                                                    |
+| `POST` | `/api/chat/`                | Chat con RAG (consulta libre)                                   |
+| `POST` | `/api/analyze-claim/`       | Analisis de reclamacion + tono                                  |
+| `POST` | `/api/agent-feedback/`      | Evaluacion de agente optimizada (~4x mas rapido)                |
+| `POST` | `/api/agent-feedback-deep/` | Evaluacion de agente exhaustiva (8 criterios, multi-step agent) |
+
+---
+
+## Detalle de Endpoints
+
+### GET `/api/health/`
+
+Health check del servidor.
+
+**Respuesta:**
 
 ```json
 {
@@ -98,59 +110,290 @@ GET /api/health/
 }
 ```
 
-**Status Codes:**
+---
 
-- `200 OK` - Service is healthy
+### POST `/api/chat/`
+
+Consulta libre al chatbot con RAG. Busca en las politicas de MueblesRD y responde con fuentes.
+
+**Entrada:**
+
+```json
+{
+  "query": "Como verifico el cumplimiento de la Ley 25?"
+}
+```
+
+| Campo   | Tipo   | Requerido | Descripcion                  |
+| ------- | ------ | --------- | ---------------------------- |
+| `query` | string | Si        | Pregunta en lenguaje natural |
+
+**Respuesta:**
+
+```json
+{
+  "answer": "Para verificar el cumplimiento de la Ley 25, debes...",
+  "sources": ["1. Verify Law 25 Compliance", "0.-Global Procedure"]
+}
+```
 
 ---
 
-### Chat
+### POST `/api/analyze-claim/`
 
-Send a query to the chatbot and receive a response with relevant sources.
+Analiza una reclamacion de cliente: busca politicas relevantes, analiza el tono del mensaje y devuelve recomendaciones.
 
-```
-POST /api/chat/
-```
-
-**Request Headers:**
-
-```
-Content-Type: application/json
-```
-
-**Request Body:**
+**Entrada:**
 
 ```json
 {
-  "query": "How do I process a customer return request?"
+  "request_type": "Submit a Claim",
+  "claim_type": "Defective, damaged product(s) or missing part(s)",
+  "multiple_products_damaged": false,
+  "damage_type": "Mechanical or Structural",
+  "delivery_date": "2025-12-15",
+  "product_type": "Furniture",
+  "manufacturer": "Ashley Furniture",
+  "store_of_purchase": "MueblesRD Santo Domingo",
+  "product_code": "ASH-TBL-4521",
+  "purchase_confirmation_number": "CONF-2025-00981",
+  "description": "The dining table leg snapped off during normal use two weeks after delivery.",
+  "data_sharing_consent": true,
+  "has_attachments": true
 }
 ```
 
-| Field   | Type   | Required | Description                   |
-| ------- | ------ | -------- | ----------------------------- |
-| `query` | string | Yes      | The customer service question |
+| Campo                          | Tipo    | Requerido | Valores permitidos                                                                                                                                           |
+| ------------------------------ | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `request_type`                 | string  | Si        | `"Submit a Claim"`, `"Follow-up on an Ongoing Claim"`, `"Modification, Follow-up or Question About an Order in Progress"`, `"Out of warranty parts order"`   |
+| `claim_type`                   | string  | Si        | `"Defective, damaged product(s) or missing part(s)"`, `"Error or Missing Product"`, `"Home Damage or Delivery Complaint"`, `"ComfoRD Warranty - Mattresses"` |
+| `multiple_products_damaged`    | boolean | Si        | `true` / `false`                                                                                                                                             |
+| `damage_type`                  | string  | Si        | `"Aesthetics"`, `"Mechanical or Structural"`, `"Missing Part(s)"`                                                                                            |
+| `delivery_date`                | string  | Si        | Formato `YYYY-MM-DD`                                                                                                                                         |
+| `product_type`                 | string  | Si        | `"Furniture"`, `"Appliances"`, `"Barbecue"`, `"Electronics"`, `"Mattresses"`                                                                                 |
+| `manufacturer`                 | string  | Si        | Texto libre (max 100 chars)                                                                                                                                  |
+| `store_of_purchase`            | string  | Si        | Texto libre (max 100 chars)                                                                                                                                  |
+| `product_code`                 | string  | Si        | Texto libre (max 50 chars)                                                                                                                                   |
+| `purchase_confirmation_number` | string  | Si        | Texto libre (max 50 chars)                                                                                                                                   |
+| `description`                  | string  | Si        | Descripcion del problema (10-5000 chars)                                                                                                                     |
+| `data_sharing_consent`         | boolean | Si        | `true` / `false`                                                                                                                                             |
+| `has_attachments`              | boolean | Si        | `true` / `false`                                                                                                                                             |
 
-**Response:**
+**Respuesta:**
 
 ```json
 {
-  "answer": "To process a customer return request, follow these steps: 1. Verify the customer's purchase in Salesforce...",
-  "sources": ["5.1 Return Procedures", "3. Customer Verification"]
+  "claim_summary": {
+    "request_type": "Submit a Claim",
+    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "product_type": "Furniture",
+    "damage_type": "Mechanical or Structural",
+    "days_since_delivery": 45
+  },
+  "tone_analysis": {
+    "tone": "neutral",
+    "confidence": 0.85,
+    "indicators": ["factual description", "no emotional language"]
+  },
+  "policy_recommendations": [
+    {
+      "policy_reference": "Section 4: Respecting Deadlines",
+      "recommendation": "Claim is within the 90-day window.",
+      "priority": "high"
+    }
+  ],
+  "communication_recommendations": {
+    "approach": "standard",
+    "tips": ["Acknowledge the issue", "Reference the policy"],
+    "suggested_opening": "Thank you for reaching out..."
+  },
+  "next_steps": [
+    "Verify contract number in Salesforce",
+    "Request photos of the damage"
+  ],
+  "sources": ["4. Respecting Deadlines", "5.1 Validation of Damage Type"]
 }
 ```
 
-| Field     | Type   | Description                                      |
-| --------- | ------ | ------------------------------------------------ |
-| `answer`  | string | Generated response based on company policies     |
-| `sources` | array  | List of policy sections referenced in the answer |
+---
 
-**Status Codes:**
+### POST `/api/agent-feedback/`
 
-- `200 OK` - Query processed successfully
-- `400 Bad Request` - Missing or invalid query parameter
-- `500 Internal Server Error` - Processing error
+Evalua el manejo de una reclamacion por parte de un agente de tienda. Version optimizada: usa queries batch al vectorstore y una sola llamada LLM (~4-5 segundos).
 
-**Error Response Example:**
+**Entrada:**
+
+Incluye todos los campos de `analyze-claim` mas 9 campos adicionales de verificacion:
+
+```json
+{
+  "request_type": "Submit a Claim",
+  "claim_type": "Defective, damaged product(s) or missing part(s)",
+  "multiple_products_damaged": false,
+  "damage_type": "Mechanical or Structural",
+  "delivery_date": "2025-12-15",
+  "product_type": "Furniture",
+  "manufacturer": "Ashley Furniture",
+  "store_of_purchase": "MueblesRD Santo Domingo",
+  "product_code": "ASH-TBL-4521",
+  "purchase_confirmation_number": "CONF-2025-00981",
+  "description": "The dining table leg snapped off during normal use two weeks after delivery.",
+  "data_sharing_consent": true,
+  "has_attachments": true,
+  "personal_info_verified": true,
+  "contract_ownership": true,
+  "contract_number": "CN-2025-34567",
+  "salesforce_client_number": "SF-CL-9876",
+  "meublex_client_number": "SF-CL-9876",
+  "salesforce_delivery_date": "2025-12-15",
+  "meublex_delivery_date": "2025-12-15",
+  "claim_date": "2025-12-30",
+  "eligible": true
+}
+```
+
+**Campos adicionales:**
+
+| Campo                      | Tipo    | Requerido | Descripcion                                                          |
+| -------------------------- | ------- | --------- | -------------------------------------------------------------------- |
+| `personal_info_verified`   | boolean | Si        | Informacion personal consistente entre Salesforce, Webform y Meublex |
+| `contract_ownership`       | boolean | Si        | El agente verifico al titular del contrato                           |
+| `contract_number`          | string  | Si        | Numero de contrato (max 100 chars)                                   |
+| `salesforce_client_number` | string  | Si        | Numero de cliente en Salesforce (max 100 chars)                      |
+| `meublex_client_number`    | string  | Si        | Numero de cliente en Meublex (max 100 chars)                         |
+| `salesforce_delivery_date` | string  | Si        | Fecha de entrega en Salesforce (`YYYY-MM-DD`)                        |
+| `meublex_delivery_date`    | string  | Si        | Fecha de entrega en Meublex (`YYYY-MM-DD`)                           |
+| `claim_date`               | string  | Si        | Fecha en que se presento la reclamacion (`YYYY-MM-DD`)               |
+| `eligible`                 | boolean | Si        | Decision de elegibilidad del agente                                  |
+
+**Respuesta:**
+
+```json
+{
+  "claim_summary": {
+    "request_type": "Submit a Claim",
+    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "product_type": "Furniture",
+    "damage_type": "Mechanical or Structural",
+    "manufacturer": "Ashley Furniture",
+    "claim_date": "2025-12-30",
+    "days_since_delivery": 45,
+    "days_delivery_to_claim": 15,
+    "eligible_input": true
+  },
+  "criteria_evaluations": {
+    "personal_information_consistency": { "result": true },
+    "contract_ownership_verification": { "result": true },
+    "client_number_validation": { "result": true },
+    "delivery_date_consistency": { "result": true, "recommendation": "..." },
+    "damage_classification_validation": {
+      "result": true,
+      "recommendation": "..."
+    },
+    "attachments_verification": { "result": true, "recommendation": "..." },
+    "warranty_eligibility_by_claim_date": {
+      "result": true,
+      "recommendation": "..."
+    },
+    "eligibility_decision": { "isDecisionCorrect": true, "explanation": "..." }
+  },
+  "final_recommendation": "The agent handled this claim correctly...",
+  "final_eligibility": { "isEligible": true, "justification": "..." },
+  "sources": ["4. Respecting Deadlines", "5.1 Validation of Damage Type"]
+}
+```
+
+> **Nota:** Los criterios 1-3 solo devuelven `{"result": true/false}` sin explicacion, ya que son verificaciones deterministicas.
+
+---
+
+### POST `/api/agent-feedback-deep/`
+
+Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multiples llamadas a herramientas de RAG para un analisis mas profundo de cada criterio (8 criterios con explicaciones detalladas).
+
+> **Nota:** Este endpoint es mas exhaustivo pero tarda ~15-20 segundos por las multiples llamadas LLM + vector search. Para la version rapida, usar `/api/agent-feedback/`.
+
+**Entrada:** Identica a `/api/agent-feedback/`
+
+**Diferencias con `/api/agent-feedback/`:**
+
+| Aspecto               | `agent-feedback`                           | `agent-feedback-deep`           |
+| --------------------- | ------------------------------------------ | ------------------------------- |
+| Busqueda de politicas | 2 queries batch al vectorstore             | 4-5 tool calls del agente       |
+| Criterios 1-3         | 100% deterministicos (solo `true`/`false`) | LLM evalua cada uno con detalle |
+| Llamadas LLM          | 1 sola llamada `model.invoke()`            | ~6-8 (agent loop)               |
+| Tiempo estimado       | ~4-5s                                      | ~15-20s                         |
+
+**Respuesta:**
+
+```json
+{
+  "claim_summary": {
+    "request_type": "Submit a Claim",
+    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "product_type": "Furniture",
+    "damage_type": "Mechanical or Structural",
+    "manufacturer": "Ashley Furniture",
+    "claim_date": "2025-12-30",
+    "days_since_delivery": 45,
+    "days_delivery_to_claim": 15,
+    "eligible_input": true
+  },
+  "criteria_evaluations": {
+    "personal_information_consistency": {
+      "result": true,
+      "explanation": "..."
+    },
+    "contract_ownership_verification": { "result": true, "explanation": "..." },
+    "client_number_validation": { "result": true, "explanation": "..." },
+    "delivery_date_consistency": { "result": true, "recommendation": "..." },
+    "damage_classification_validation": {
+      "result": true,
+      "recommendation": "..."
+    },
+    "attachments_verification": { "result": true, "recommendation": "..." },
+    "warranty_eligibility_by_claim_date": {
+      "result": true,
+      "recommendation": "..."
+    },
+    "eligibility_decision": { "isDecisionCorrect": true, "explanation": "..." }
+  },
+  "final_recommendation": "The agent handled this claim correctly...",
+  "final_eligibility": { "isEligible": true, "justification": "..." },
+  "sources": ["4. Respecting Deadlines", "5.1 Validation of Damage Type"]
+}
+```
+
+**Criterios de evaluacion (deep):**
+
+| #   | Criterio                                      | Metodo                                  | Usa RAG? |
+| --- | --------------------------------------------- | --------------------------------------- | -------- |
+| 1   | Consistencia de informacion personal (Ley 25) | Boolean `personal_info_verified` + LLM  | Minimo   |
+| 2   | Verificacion de titular del contrato          | Boolean `contract_ownership` + LLM      | No       |
+| 3   | Validacion de numero de cliente               | Comparacion SF vs Meublex + LLM         | No       |
+| 4   | Consistencia de fechas de entrega             | Comparacion + RAG (politicas de plazos) | Si       |
+| 5   | Clasificacion del dano                        | LLM compara descripcion vs tipo con RAG | Si       |
+| 6   | Verificacion de adjuntos                      | Boolean + RAG (requisitos de adjuntos)  | Si       |
+| 7   | Elegibilidad por fecha de reclamacion         | Dias entre entrega y reclamacion + RAG  | Si       |
+| 8   | Decision de elegibilidad final                | LLM sintetiza los 7 criterios + RAG     | Si       |
+
+---
+
+## Respuestas de Error
+
+**400 - Validacion fallida:**
+
+```json
+{
+  "error": "Invalid input",
+  "details": {
+    "claim_type": ["\"invalid\" is not a valid choice."],
+    "delivery_date": ["Date has wrong format. Use YYYY-MM-DD."]
+  }
+}
+```
+
+**400 - Campo faltante (chat):**
 
 ```json
 {
@@ -158,110 +401,75 @@ Content-Type: application/json
 }
 ```
 
-## Usage Examples
+**500 - Error interno:**
 
-### cURL
+```json
+{
+  "error": "Connection to Pinecone timed out"
+}
+```
+
+---
+
+## Ejemplos con curl
+
+### Chat
 
 ```bash
-# Health check
-curl http://localhost:8000/api/health/
-
-# Chat query
 curl -X POST http://localhost:8000/api/chat/ \
   -H "Content-Type: application/json" \
-  -d '{"query": "What is the procedure for Law 25 compliance verification?"}'
+  -d '{"query": "How do I verify Law 25 compliance?"}'
 ```
 
-### Python (requests)
+### Analisis de reclamacion
 
-```python
-import requests
-
-# Chat query
-response = requests.post(
-    "http://localhost:8000/api/chat/",
-    json={"query": "How do I handle a duplicate customer request?"}
-)
-
-data = response.json()
-print(f"Answer: {data['answer']}")
-print(f"Sources: {data['sources']}")
+```bash
+curl -X POST http://localhost:8000/api/analyze-claim/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "request_type": "Submit a Claim",
+    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "multiple_products_damaged": false,
+    "damage_type": "Mechanical or Structural",
+    "delivery_date": "2025-12-15",
+    "product_type": "Furniture",
+    "manufacturer": "Ashley Furniture",
+    "store_of_purchase": "MueblesRD Santo Domingo",
+    "product_code": "ASH-TBL-4521",
+    "purchase_confirmation_number": "CONF-2025-00981",
+    "description": "The dining table leg snapped off during normal use two weeks after delivery.",
+    "data_sharing_consent": true,
+    "has_attachments": true
+  }'
 ```
 
-### JavaScript (fetch)
+### Feedback de agente
 
-```javascript
-const response = await fetch("http://localhost:8000/api/chat/", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    query: "How do I check delivery deadlines?",
-  }),
-});
-
-const data = await response.json();
-console.log("Answer:", data.answer);
-console.log("Sources:", data.sources);
+```bash
+curl -X POST http://localhost:8000/api/agent-feedback/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "request_type": "Submit a Claim",
+    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "multiple_products_damaged": false,
+    "damage_type": "Mechanical or Structural",
+    "delivery_date": "2025-12-15",
+    "product_type": "Furniture",
+    "manufacturer": "Ashley Furniture",
+    "store_of_purchase": "MueblesRD Santo Domingo",
+    "product_code": "ASH-TBL-4521",
+    "purchase_confirmation_number": "CONF-2025-00981",
+    "description": "The dining table leg snapped off during normal use two weeks after delivery.",
+    "data_sharing_consent": true,
+    "has_attachments": true,
+    "personal_info_verified": true,
+    "contract_ownership": true,
+    "contract_number": "CN-2025-34567",
+    "salesforce_client_number": "SF-CL-9876",
+    "meublex_client_number": "SF-CL-9876",
+    "salesforce_delivery_date": "2025-12-15",
+    "meublex_delivery_date": "2025-12-15",
+    "claim_date": "2025-12-30",
+    "eligible": true
+  }'
 ```
-
-## Architecture
-
-```
-┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
-│   Client    │────▶│  Django API  │────▶│  LangChain      │
-│  (Frontend) │     │  /api/chat/  │     │  Agent          │
-└─────────────┘     └──────────────┘     └────────┬────────┘
-                                                  │
-                    ┌─────────────────────────────┼─────────────────────────────┐
-                    │                             ▼                             │
-                    │    ┌─────────────────┐     ┌─────────────────┐           │
-                    │    │    Pinecone     │◀────│   Retrieval     │           │
-                    │    │  Vector Store   │     │     Tool        │           │
-                    │    └─────────────────┘     └─────────────────┘           │
-                    │                                     │                     │
-                    │                                     ▼                     │
-                    │                            ┌─────────────────┐           │
-                    │                            │   OpenAI GPT    │           │
-                    │                            │   (Response)    │           │
-                    │                            └─────────────────┘           │
-                    └───────────────────────────────────────────────────────────┘
-```
-
-## Supported Use Cases
-
-The chatbot is designed to assist store employees with:
-
-- Processing customer requests following standard procedures
-- Verifying Law 25 compliance (data protection)
-- Validating contracts in Salesforce and Meublex systems
-- Checking deadlines and delivery dates
-- Determining request admissibility
-- Handling duplicate customer requests
-- Following up on After-Sales Service (ADS) requests
-- Assessing product damage (aesthetic vs. mechanical)
-
-## Production Deployment
-
-For production deployment:
-
-1. Set `DEBUG=False` in environment variables
-2. Configure a proper `DJANGO_SECRET_KEY`
-3. Set up appropriate `ALLOWED_HOSTS` in settings
-4. Configure CORS settings to restrict allowed origins
-5. Deploy behind a reverse proxy (nginx, etc.)
-6. Consider adding authentication if exposing publicly
-
-## Dependencies
-
-| Package             | Purpose                      |
-| ------------------- | ---------------------------- |
-| Django              | Web framework                |
-| djangorestframework | REST API framework           |
-| django-cors-headers | CORS support                 |
-| python-dotenv       | Environment variable loading |
-| langchain           | AI orchestration framework   |
-| langchain-openai    | OpenAI integration           |
-| langchain-pinecone  | Pinecone vector store        |
-| langsmith           | LangChain tracing/monitoring |
