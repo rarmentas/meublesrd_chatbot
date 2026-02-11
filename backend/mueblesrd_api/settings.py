@@ -126,7 +126,13 @@ REST_FRAMEWORK = {
 # drf-spectacular (OpenAPI / Swagger)
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Muebles RD Chatbot API',
-    'DESCRIPTION': 'API del chatbot de Muebles RD (consulta RAG y health check). Autenticación por token o usuario/contraseña (Basic).',
+    'DESCRIPTION': (
+        'API REST para soporte de servicio al cliente de MueblesRD: RAG (LangChain, Pinecone, OpenAI), '
+        'análisis de reclamaciones y evaluación de agentes. '
+        'Endpoints: GET /api/health/, POST /api/chat/, POST /api/analyze-claim/, '
+        'POST /api/agent-feedback/ (optimizado ~4-5s), POST /api/agent-feedback-deep/ (exhaustivo ~15-20s), '
+        'POST /api/auth/token/. Autenticación por token o Basic (salvo health, docs y auth/token).'
+    ),
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
