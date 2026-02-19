@@ -209,17 +209,13 @@ def analyze_claim(claim_data: Dict[str, Any]) -> Dict[str, Any]:
     # Build claim context
     claim_context = f"""
 Claim Details:
-- Request Type: {claim_data["request_type"]}
 - Claim Type: {claim_data["claim_type"]}
-- Multiple Products: {"Yes" if claim_data["multiple_products_damaged"] else "No"}
 - Damage Type: {claim_data["damage_type"]}
 - Delivery: {claim_data["delivery_date"]} ({days_since_delivery} days ago)
 - Product: {claim_data["product_type"]} by {claim_data["manufacturer"]}
 - Store: {claim_data["store_of_purchase"]}
 - Product Code: {claim_data["product_code"]}
-- Confirmation #: {claim_data["purchase_confirmation_number"]}
 - Has Attachments: {"Yes" if claim_data["has_attachments"] else "No"}
-- Data Consent: {"Yes" if claim_data["data_sharing_consent"] else "No"}
 
 Customer Message:
 "{claim_data["description"]}"
@@ -301,7 +297,6 @@ Please:
     # Build final response
     return {
         "claim_summary": {
-            "request_type": claim_data["request_type"],
             "claim_type": claim_data["claim_type"],
             "product_type": claim_data["product_type"],
             "damage_type": claim_data["damage_type"],
@@ -321,28 +316,19 @@ Please:
 
 
 def evaluate_agent_feedback_optimized(feedback_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Optimized agent feedback: pre-fetches policies, deterministic criteria 1-3, single LLM call."""
+    """Optimized agent feedback: pre-fetches policies, deterministic criterion 1, single LLM call for 2-5."""
     from datetime import datetime, date
     import json
 
-    # --- Deterministic checks (criteria 1-3) ---
-    personal_info_ok = feedback_data["personal_info_verified"]
-    contract_ownership_ok = feedback_data["contract_ownership"] and bool(feedback_data["contract_number"].strip())
-    client_numbers_match = (
-        feedback_data["salesforce_client_number"].strip()
-        == feedback_data["meublex_client_number"].strip()
-    )
-    delivery_dates_match = (
-        feedback_data["salesforce_delivery_date"]
-        == feedback_data["meublex_delivery_date"]
-    )
+    # --- Deterministic check (criterion 1) ---
+    has_contract_number = bool(feedback_data["contract_number"].strip())
 
     delivery_date = datetime.strptime(feedback_data["delivery_date"], "%Y-%m-%d").date()
     claim_date = datetime.strptime(feedback_data["claim_date"], "%Y-%m-%d").date()
     days_since_delivery = (date.today() - delivery_date).days
     days_delivery_to_claim = (claim_date - delivery_date).days
 
-    # --- Pre-fetch policies in 2 batch queries (instead of 5 agent tool calls) ---
+    # --- Pre-fetch policies in 2 batch queries ---
     retriever = vectorstore.as_retriever()
 
     query_1 = (
@@ -370,16 +356,13 @@ def evaluate_agent_feedback_optimized(feedback_data: Dict[str, Any]) -> Dict[str
         for doc in all_docs
     )
 
-    # --- Single LLM call for criteria 4-8 ---
+    # --- Single LLM call for criteria 2-5 ---
     prompt = f"""You are a quality assurance evaluator for MueblesRD. Below are the claim details, pre-computed verification results, and relevant company policies.
 
-Criteria 1-3 have already been evaluated deterministically:
-- Criterion 1 (Personal Info Consistency): {"PASS" if personal_info_ok else "FAIL"}
-- Criterion 2 (Contract Ownership): {"PASS" if contract_ownership_ok else "FAIL"} — Contract #: {feedback_data["contract_number"]}
-- Criterion 3 (Client Number Match): {"PASS" if client_numbers_match else "FAIL"} — SF: {feedback_data["salesforce_client_number"]}, MX: {feedback_data["meublex_client_number"]}
+Criterion 1 has already been evaluated deterministically:
+- Criterion 1 (Contract Verification): {"PASS" if has_contract_number else "FAIL"} — Contract #: {feedback_data["contract_number"]}
 
 === CLAIM DETAILS ===
-- Request Type: {feedback_data["request_type"]}
 - Claim Type: {feedback_data["claim_type"]}
 - Damage Type: {feedback_data["damage_type"]}
 - Product Type: {feedback_data["product_type"]}
@@ -388,9 +371,6 @@ Criteria 1-3 have already been evaluated deterministically:
 - Store: {feedback_data["store_of_purchase"]}
 - Has Attachments: {"Yes" if feedback_data["has_attachments"] else "No"}
 - Delivery Date: {feedback_data["delivery_date"]} ({days_since_delivery} days ago)
-- Salesforce Delivery Date: {feedback_data["salesforce_delivery_date"]}
-- Meublex Delivery Date: {feedback_data["meublex_delivery_date"]}
-- Delivery Dates Match: {delivery_dates_match}
 - Claim Date: {feedback_data["claim_date"]}
 - Days Between Delivery and Claim: {days_delivery_to_claim}
 - Agent's Eligibility Decision: {"Eligible" if feedback_data["eligible"] else "Not Eligible"}
@@ -399,20 +379,18 @@ Criteria 1-3 have already been evaluated deterministically:
 === COMPANY POLICIES ===
 {policies_text}
 
-Using ONLY the policies above, evaluate criteria 4-8:
+Using ONLY the policies above, evaluate criteria 2-5:
 
-4. Delivery Date Consistency — Are delivery dates consistent? Is the claim within the allowed timeframe?
-5. Damage Classification — Does the damage type match the customer description per policy?
-6. Attachments — Are attachments provided as required by policy?
-7. Warranty Eligibility by Claim Date — Was the claim filed within the warranty window for this product/damage/manufacturer?
-8. Eligibility Decision — Considering all 7 prior results, is the agent's eligibility decision correct?
+2. Delivery Date — Is the claim within the allowed warranty timeframe based on delivery_date, claim_date, description, manufacturer, and company policies? Result should be "In Warranty" or "Out of Warranty". Remind the agent to check the delivery date in other systems.
+3. Damage Classification — Does the damage type match the customer description per policy and product type?
+4. Attachments — Are attachments provided as required by policy for the claim description?
+5. Eligibility Decision — Considering all 4 prior results, is the agent's eligibility decision correct?
 
 Return ONLY valid JSON with this exact structure:
 {{
-    "delivery_date_consistency": {{"result": true/false, "recommendation": "one sentence"}},
+    "delivery_date": {{"result": "In Warranty"/"Out of Warranty", "recommendation": "one sentence"}},
     "damage_classification_validation": {{"result": true/false, "recommendation": "one sentence"}},
     "attachments_verification": {{"result": true/false, "recommendation": "one sentence"}},
-    "warranty_eligibility_by_claim_date": {{"result": true/false, "recommendation": "one sentence"}},
     "eligibility_decision": {{"isDecisionCorrect": true/false, "explanation": "one sentence"}},
     "final_recommendation": "summary recommendation for the agent",
     "final_eligibility": {{"isEligible": true/false, "justification": "one sentence"}}
@@ -431,19 +409,26 @@ Return ONLY valid JSON with this exact structure:
         parsed = json.loads(content)
     except Exception:
         parsed = {
-            "delivery_date_consistency": {"result": delivery_dates_match, "recommendation": "Unable to parse LLM response."},
+            "delivery_date": {"result": "Unknown", "recommendation": "Unable to parse LLM response."},
             "damage_classification_validation": {"result": False, "recommendation": "Unable to parse LLM response."},
             "attachments_verification": {"result": feedback_data["has_attachments"], "recommendation": "Unable to parse LLM response."},
-            "warranty_eligibility_by_claim_date": {"result": False, "recommendation": "Unable to parse LLM response."},
             "eligibility_decision": {"isDecisionCorrect": False, "explanation": "Unable to parse LLM response."},
             "final_recommendation": "Unable to parse LLM response. Please review manually.",
             "final_eligibility": {"isEligible": False, "justification": "Unable to parse LLM response."}
         }
 
+    # Build deterministic criterion 1 result with explanation per prompt
+    contract_result = "Correct" if has_contract_number else "Incorrect"
+    contract_explanation = (
+        f"Contract number {'is' if has_contract_number else 'is not'} provided "
+        f"({feedback_data['contract_number'] if has_contract_number else 'missing'}). "
+        "IMPORTANT: Please compare the name of the person that made the ticket or claim "
+        "against the data in the contract to ensure they match."
+    )
+
     # Merge deterministic + LLM results
     return {
         "claim_summary": {
-            "request_type": feedback_data["request_type"],
             "claim_type": feedback_data["claim_type"],
             "product_type": feedback_data["product_type"],
             "damage_type": feedback_data["damage_type"],
@@ -454,13 +439,10 @@ Return ONLY valid JSON with this exact structure:
             "eligible_input": feedback_data["eligible"]
         },
         "criteria_evaluations": {
-            "personal_information_consistency": {"result": personal_info_ok},
-            "contract_ownership_verification": {"result": contract_ownership_ok},
-            "client_number_validation": {"result": client_numbers_match},
-            "delivery_date_consistency": parsed.get("delivery_date_consistency", {}),
+            "contract_verification": {"result": contract_result, "explanation": contract_explanation},
+            "delivery_date": parsed.get("delivery_date", {}),
             "damage_classification_validation": parsed.get("damage_classification_validation", {}),
             "attachments_verification": parsed.get("attachments_verification", {}),
-            "warranty_eligibility_by_claim_date": parsed.get("warranty_eligibility_by_claim_date", {}),
             "eligibility_decision": parsed.get("eligibility_decision", {})
         },
         "final_recommendation": parsed.get("final_recommendation", ""),
@@ -475,20 +457,12 @@ Return ONLY valid JSON with this exact structure:
 
 
 def evaluate_agent_feedback(feedback_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Evaluate a store agent's claim handling across 7 criteria using RAG."""
+    """Evaluate a store agent's claim handling across 5 criteria using RAG (exhaustive, multi-step agent)."""
     from datetime import datetime, date
     import json
 
-    # --- Pre-compute deterministic checks ---
-    personal_info_verified = feedback_data["personal_info_verified"]
-    client_numbers_match = (
-        feedback_data["salesforce_client_number"].strip()
-        == feedback_data["meublex_client_number"].strip()
-    )
-    delivery_dates_match = (
-        feedback_data["salesforce_delivery_date"]
-        == feedback_data["meublex_delivery_date"]
-    )
+    # --- Pre-compute deterministic check (criterion 1) ---
+    has_contract_number = bool(feedback_data["contract_number"].strip())
 
     delivery_date = datetime.strptime(feedback_data["delivery_date"], "%Y-%m-%d").date()
     claim_date = datetime.strptime(feedback_data["claim_date"], "%Y-%m-%d").date()
@@ -498,101 +472,45 @@ def evaluate_agent_feedback(feedback_data: Dict[str, Any]) -> Dict[str, Any]:
     # --- Build context string ---
     claim_context = f"""
 === CLAIM DETAILS ===
-- Request Type: {feedback_data["request_type"]}
 - Claim Type: {feedback_data["claim_type"]}
-- Multiple Products Damaged: {"Yes" if feedback_data["multiple_products_damaged"] else "No"}
 - Damage Type: {feedback_data["damage_type"]}
 - Product Type: {feedback_data["product_type"]}
 - Manufacturer: {feedback_data["manufacturer"]}
 - Store of Purchase: {feedback_data["store_of_purchase"]}
 - Product Code: {feedback_data["product_code"]}
-- Purchase Confirmation #: {feedback_data["purchase_confirmation_number"]}
-- Data Sharing Consent: {"Yes" if feedback_data["data_sharing_consent"] else "No"}
 - Has Attachments: {"Yes" if feedback_data["has_attachments"] else "No"}
 - Customer Description: "{feedback_data["description"]}"
 
 === VERIFICATION DATA ===
-- Criterion 1 - Personal Info Verified (across Salesforce, Webform, Meublex): {personal_info_verified}
-- Criterion 2 - Contract Ownership Verified: {feedback_data["contract_ownership"]}
-- Criterion 2 - Contract Number: {feedback_data["contract_number"]}
-- Criterion 3 - Salesforce Client Number: {feedback_data["salesforce_client_number"]}
-- Criterion 3 - Meublex Client Number: {feedback_data["meublex_client_number"]}
-- Criterion 3 - Client Numbers Match: {client_numbers_match}
-- Criterion 4 - Delivery Date (from claim): {feedback_data["delivery_date"]} ({days_since_delivery} days ago)
-- Criterion 4 - Salesforce Delivery Date: {feedback_data["salesforce_delivery_date"]}
-- Criterion 4 - Meublex Delivery Date: {feedback_data["meublex_delivery_date"]}
-- Criterion 4 - Delivery Dates Match: {delivery_dates_match}
-- Criterion 6 - Has Attachments: {"Yes" if feedback_data["has_attachments"] else "No"}
-- Criterion 7 - Agent's Eligibility Decision: {"Eligible" if feedback_data["eligible"] else "Not Eligible"}
-- Criterion 8 - Claim Date: {feedback_data["claim_date"]}
-- Criterion 8 - Days Between Delivery and Claim: {days_delivery_to_claim}
-- Criterion 8 - Damage Type: {feedback_data["damage_type"]}
-- Criterion 8 - Manufacturer: {feedback_data["manufacturer"]}
-- Criterion 8 - Product Type: {feedback_data["product_type"]}
+- Criterion 1 - Contract Number Provided: {"Yes" if has_contract_number else "No"} — Contract #: {feedback_data["contract_number"]}
+- Criterion 2 - Delivery Date (from claim): {feedback_data["delivery_date"]} ({days_since_delivery} days ago)
+- Criterion 2 - Claim Date: {feedback_data["claim_date"]}
+- Criterion 2 - Days Between Delivery and Claim: {days_delivery_to_claim}
+- Criterion 4 - Has Attachments: {"Yes" if feedback_data["has_attachments"] else "No"}
+- Criterion 5 - Agent's Eligibility Decision: {"Eligible" if feedback_data["eligible"] else "Not Eligible"}
 """
 
-    system_prompt = """You are a quality assurance evaluator for MueblesRD. Your task is to evaluate a store agent's handling of a customer claim across 8 criteria.
+    # Load prompt from file
+    prompt_path = BASE_DIR / 'mueblesrd_api' / 'prompts' / 'feedback-agent.txt'
+    with open(prompt_path, 'r') as f:
+        feedback_prompt = f.read()
+
+    system_prompt = f"""{feedback_prompt}
 
 You have access to the retrieve_policies tool. Use it to look up company policies when needed.
 
-EVALUATION CRITERIA:
-
-1. Personal Information Consistency (Law 25 Compliance)
-   - The `personal_info_verified` boolean indicates whether personal data (names, emails) was verified as consistent across Salesforce, Webform, and Meublex systems.
-   - If true: personal data is consistent. Assess Law 25 compliance implications.
-   - If false: there is a mismatch. Flag the compliance risk.
-
-2. Contract Ownership Verification
-   - The `contract_ownership` boolean indicates whether the agent confirmed the correct contract owner.
-   - Verify the contract number is provided and appears valid (non-empty, reasonable format).
-   - If contract_ownership is true: the agent confirmed ownership. Validate that a contract number is also present.
-   - If contract_ownership is false: flag that ownership was not confirmed.
-
-3. Client Number Validation
-   - The pre-computed `client_numbers_match` boolean tells you if Salesforce and Meublex client numbers are identical.
-   - Explain the implications of a match or mismatch.
-
-4. Delivery Date Consistency (REQUIRES POLICY LOOKUP)
-   - The pre-computed `delivery_dates_match` boolean tells you if Salesforce and Meublex delivery dates are identical.
-   - Use retrieve_policies to look up deadline policies for the claim type.
-   - Assess whether the claim is within the allowed timeframe based on days since delivery.
-
-5. Damage Classification Validation (REQUIRES POLICY LOOKUP)
-   - Compare the selected damage type against the customer's description.
-   - Use retrieve_policies to look up policies for the damage type and product type.
-   - Assess whether the classification is correct.
-
-6. Attachments Verification (REQUIRES POLICY LOOKUP)
-   - Check whether attachments are provided.
-   - Use retrieve_policies to look up attachment requirements for this claim type.
-   - Explain why attachments are or are not required.
-
-7. Warranty Eligibility by Claim Date (REQUIRES POLICY LOOKUP)
-   - Compare the claim date against the delivery date. The pre-computed `days_delivery_to_claim` tells you how many days elapsed between delivery and the claim submission.
-   - Use retrieve_policies to look up warranty periods and deadline policies for the specific combination of: damage type, product type, and manufacturer.
-   - Assess whether the claim was filed within the allowed warranty window according to company policies.
-   - Consider the customer's description and damage type to determine if the timeframe is consistent with the reported issue.
-
-8. Eligibility Decision (REQUIRES POLICY LOOKUP)
-   - Synthesize results from all 7 previous criteria.
-   - Use retrieve_policies to confirm eligibility rules.
-   - Determine if the agent's eligibility decision is correct.
-
 Return your response as valid JSON with this EXACT structure:
-{
-    "criteria_evaluations": {
-        "personal_information_consistency": {"result": true/false, "explanation": "..."},
-        "contract_ownership_verification": {"result": true/false, "explanation": "..."},
-        "client_number_validation": {"result": true/false, "explanation": "..."},
-        "delivery_date_consistency": {"result": true/false, "recommendation": "..."},
-        "damage_classification_validation": {"result": true/false, "recommendation": "..."},
-        "attachments_verification": {"result": true/false, "recommendation": "..."},
-        "warranty_eligibility_by_claim_date": {"result": true/false, "recommendation": "..."},
-        "eligibility_decision": {"isDecisionCorrect": true/false, "explanation": "..."}
-    },
+{{
+    "criteria_evaluations": {{
+        "contract_verification": {{"result": "Correct"/"Incorrect", "explanation": "..."}},
+        "delivery_date": {{"result": "In Warranty"/"Out of Warranty", "recommendation": "..."}},
+        "damage_classification_validation": {{"result": true/false, "recommendation": "..."}},
+        "attachments_verification": {{"result": true/false, "recommendation": "..."}},
+        "eligibility_decision": {{"isDecisionCorrect": true/false, "explanation": "..."}}
+    }},
     "final_recommendation": "A summary recommendation for the agent",
-    "final_eligibility": {"isEligible": true/false, "justification": "..."}
-}"""
+    "final_eligibility": {{"isEligible": true/false, "justification": "..."}}
+}}"""
 
     agent = create_agent(model, tools=[retrieve_policies], system_prompt=system_prompt)
 
@@ -606,7 +524,7 @@ Please retrieve policies for the following topics to complete your evaluation:
 4. Warranty periods and deadline policies for "{feedback_data["product_type"]}" by "{feedback_data["manufacturer"]}" with "{feedback_data["damage_type"]}" damage
 5. Eligibility criteria and delivery deadline policies
 
-After retrieving the relevant policies, evaluate all 8 criteria and return the structured JSON response."""
+After retrieving the relevant policies, evaluate all 5 criteria and return the structured JSON response."""
 
     response = agent.invoke({"messages": [{"role": "user", "content": user_message}]})
 
@@ -630,13 +548,10 @@ After retrieving the relevant policies, evaluate all 8 criteria and return the s
     except Exception:
         parsed = {
             "criteria_evaluations": {
-                "personal_information_consistency": {"result": personal_info_verified, "explanation": "Unable to parse LLM response."},
-                "contract_ownership_verification": {"result": feedback_data["contract_ownership"], "explanation": "Unable to parse LLM response."},
-                "client_number_validation": {"result": client_numbers_match, "explanation": "Unable to parse LLM response."},
-                "delivery_date_consistency": {"result": delivery_dates_match, "recommendation": "Unable to parse LLM response."},
+                "contract_verification": {"result": "Correct" if has_contract_number else "Incorrect", "explanation": "Unable to parse LLM response."},
+                "delivery_date": {"result": "Unknown", "recommendation": "Unable to parse LLM response."},
                 "damage_classification_validation": {"result": False, "recommendation": "Unable to parse LLM response."},
                 "attachments_verification": {"result": feedback_data["has_attachments"], "recommendation": "Unable to parse LLM response."},
-                "warranty_eligibility_by_claim_date": {"result": False, "recommendation": "Unable to parse LLM response."},
                 "eligibility_decision": {"isDecisionCorrect": False, "explanation": "Unable to parse LLM response."}
             },
             "final_recommendation": "Unable to parse LLM response. Please review manually.",
@@ -645,7 +560,6 @@ After retrieving the relevant policies, evaluate all 8 criteria and return the s
 
     return {
         "claim_summary": {
-            "request_type": feedback_data["request_type"],
             "claim_type": feedback_data["claim_type"],
             "product_type": feedback_data["product_type"],
             "damage_type": feedback_data["damage_type"],
