@@ -194,13 +194,6 @@ class ChatView(APIView):
 class ClaimAnalysisInputSerializer(serializers.Serializer):
     """Serializer for claim analysis input validation."""
 
-    REQUEST_TYPE_CHOICES = [
-        ("Modification, Follow-up or Question About an Order in Progress",
-         "Modification, Follow-up or Question About an Order in Progress"),
-        ("Submit a Claim", "Submit a Claim"),
-        ("Follow-up on an Ongoing Claim", "Follow-up on an Ongoing Claim"),
-        ("Out of warranty parts order", "Out of warranty parts order"),
-    ]
     CLAIM_TYPE_CHOICES = [
         ("Defective, damaged product(s) or missing part(s)",
          "Defective, damaged product(s) or missing part(s)"),
@@ -221,18 +214,14 @@ class ClaimAnalysisInputSerializer(serializers.Serializer):
         ("Furniture", "Furniture"),
     ]
 
-    request_type = serializers.ChoiceField(choices=REQUEST_TYPE_CHOICES)
     claim_type = serializers.ChoiceField(choices=CLAIM_TYPE_CHOICES)
-    multiple_products_damaged = serializers.BooleanField()
     damage_type = serializers.ChoiceField(choices=DAMAGE_TYPE_CHOICES)
     delivery_date = serializers.DateField()
     product_type = serializers.ChoiceField(choices=PRODUCT_TYPE_CHOICES)
     manufacturer = serializers.CharField(max_length=100)
     store_of_purchase = serializers.CharField(max_length=100)
     product_code = serializers.CharField(max_length=50)
-    purchase_confirmation_number = serializers.CharField(max_length=50)
     description = serializers.CharField(min_length=10, max_length=5000)
-    data_sharing_consent = serializers.BooleanField()
     has_attachments = serializers.BooleanField()
 
 
@@ -322,13 +311,7 @@ class ClaimAnalysisView(APIView):
 class AgentFeedbackInputSerializer(ClaimAnalysisInputSerializer):
     """Serializer for agent feedback evaluation. Extends claim analysis with verification fields."""
 
-    personal_info_verified = serializers.BooleanField()
-    contract_ownership = serializers.BooleanField()
     contract_number = serializers.CharField(max_length=100)
-    salesforce_client_number = serializers.CharField(max_length=100)
-    meublex_client_number = serializers.CharField(max_length=100)
-    salesforce_delivery_date = serializers.DateField()
-    meublex_delivery_date = serializers.DateField()
     claim_date = serializers.DateField()
     eligible = serializers.BooleanField()
 
@@ -404,10 +387,8 @@ class AgentFeedbackView(APIView):
 
         try:
             feedback_data = serializer.validated_data.copy()
-            # Convert all date fields to ISO strings
+            # Convert date fields to ISO strings
             feedback_data["delivery_date"] = feedback_data["delivery_date"].isoformat()
-            feedback_data["salesforce_delivery_date"] = feedback_data["salesforce_delivery_date"].isoformat()
-            feedback_data["meublex_delivery_date"] = feedback_data["meublex_delivery_date"].isoformat()
             feedback_data["claim_date"] = feedback_data["claim_date"].isoformat()
             result = evaluate_agent_feedback(feedback_data)
             return Response(result)
@@ -451,8 +432,6 @@ class AgentFeedbackOptimizedView(APIView):
         try:
             feedback_data = serializer.validated_data.copy()
             feedback_data["delivery_date"] = feedback_data["delivery_date"].isoformat()
-            feedback_data["salesforce_delivery_date"] = feedback_data["salesforce_delivery_date"].isoformat()
-            feedback_data["meublex_delivery_date"] = feedback_data["meublex_delivery_date"].isoformat()
             feedback_data["claim_date"] = feedback_data["claim_date"].isoformat()
             result = evaluate_agent_feedback_optimized(feedback_data)
             return Response(result)

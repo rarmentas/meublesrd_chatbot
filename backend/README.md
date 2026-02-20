@@ -147,44 +147,35 @@ Analiza una reclamacion de cliente: busca politicas relevantes, analiza el tono 
 
 ```json
 {
-  "request_type": "Submit a Claim",
   "claim_type": "Defective, damaged product(s) or missing part(s)",
-  "multiple_products_damaged": false,
   "damage_type": "Mechanical or Structural",
   "delivery_date": "2025-12-15",
   "product_type": "Furniture",
   "manufacturer": "Ashley Furniture",
   "store_of_purchase": "MueblesRD Santo Domingo",
   "product_code": "ASH-TBL-4521",
-  "purchase_confirmation_number": "CONF-2025-00981",
   "description": "The dining table leg snapped off during normal use two weeks after delivery.",
-  "data_sharing_consent": true,
   "has_attachments": true
 }
 ```
 
-| Campo                          | Tipo    | Requerido | Valores permitidos                                                                                                                                           |
-| ------------------------------ | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `request_type`                 | string  | Si        | `"Submit a Claim"`, `"Follow-up on an Ongoing Claim"`, `"Modification, Follow-up or Question About an Order in Progress"`, `"Out of warranty parts order"`   |
-| `claim_type`                   | string  | Si        | `"Defective, damaged product(s) or missing part(s)"`, `"Error or Missing Product"`, `"Home Damage or Delivery Complaint"`, `"ComfoRD Warranty - Mattresses"` |
-| `multiple_products_damaged`    | boolean | Si        | `true` / `false`                                                                                                                                             |
-| `damage_type`                  | string  | Si        | `"Aesthetics"`, `"Mechanical or Structural"`, `"Missing Part(s)"`                                                                                            |
-| `delivery_date`                | string  | Si        | Formato `YYYY-MM-DD`                                                                                                                                         |
-| `product_type`                 | string  | Si        | `"Furniture"`, `"Appliances"`, `"Barbecue"`, `"Electronics"`, `"Mattresses"`                                                                                 |
-| `manufacturer`                 | string  | Si        | Texto libre (max 100 chars)                                                                                                                                  |
-| `store_of_purchase`            | string  | Si        | Texto libre (max 100 chars)                                                                                                                                  |
-| `product_code`                 | string  | Si        | Texto libre (max 50 chars)                                                                                                                                   |
-| `purchase_confirmation_number` | string  | Si        | Texto libre (max 50 chars)                                                                                                                                   |
-| `description`                  | string  | Si        | Descripcion del problema (10-5000 chars)                                                                                                                     |
-| `data_sharing_consent`         | boolean | Si        | `true` / `false`                                                                                                                                             |
-| `has_attachments`              | boolean | Si        | `true` / `false`                                                                                                                                             |
+| Campo              | Tipo    | Requerido | Valores permitidos                                                                                                                                           |
+| ------------------ | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `claim_type`       | string  | Si        | `"Defective, damaged product(s) or missing part(s)"`, `"Error or Missing Product"`, `"Home Damage or Delivery Complaint"`, `"ComfoRD Warranty - Mattresses"` |
+| `damage_type`      | string  | Si        | `"Aesthetics"`, `"Mechanical or Structural"`, `"Missing Part(s)"`                                                                                            |
+| `delivery_date`    | string  | Si        | Formato `YYYY-MM-DD`                                                                                                                                         |
+| `product_type`     | string  | Si        | `"Furniture"`, `"Appliances"`, `"Barbecue"`, `"Electronics"`, `"Mattresses"`                                                                                 |
+| `manufacturer`     | string  | Si        | Texto libre (max 100 chars)                                                                                                                                  |
+| `store_of_purchase` | string | Si        | Texto libre (max 100 chars)                                                                                                                                  |
+| `product_code`     | string  | Si        | Texto libre (max 50 chars)                                                                                                                                   |
+| `description`      | string  | Si        | Descripcion del problema (10-5000 chars)                                                                                                                     |
+| `has_attachments`  | boolean | Si        | `true` / `false`                                                                                                                                             |
 
 **Respuesta:**
 
 ```json
 {
   "claim_summary": {
-    "request_type": "Submit a Claim",
     "claim_type": "Defective, damaged product(s) or missing part(s)",
     "product_type": "Furniture",
     "damage_type": "Mechanical or Structural",
@@ -223,30 +214,20 @@ Evalua el manejo de una reclamacion por parte de un agente de tienda. Version op
 
 **Entrada:**
 
-Incluye todos los campos de `analyze-claim` mas 9 campos adicionales de verificacion:
+Incluye todos los campos de `analyze-claim` mas 3 campos adicionales de verificacion:
 
 ```json
 {
-  "request_type": "Submit a Claim",
   "claim_type": "Defective, damaged product(s) or missing part(s)",
-  "multiple_products_damaged": false,
   "damage_type": "Mechanical or Structural",
   "delivery_date": "2025-12-15",
   "product_type": "Furniture",
   "manufacturer": "Ashley Furniture",
   "store_of_purchase": "MueblesRD Santo Domingo",
   "product_code": "ASH-TBL-4521",
-  "purchase_confirmation_number": "CONF-2025-00981",
   "description": "The dining table leg snapped off during normal use two weeks after delivery.",
-  "data_sharing_consent": true,
   "has_attachments": true,
-  "personal_info_verified": true,
-  "contract_ownership": true,
   "contract_number": "CN-2025-34567",
-  "salesforce_client_number": "SF-CL-9876",
-  "meublex_client_number": "SF-CL-9876",
-  "salesforce_delivery_date": "2025-12-15",
-  "meublex_delivery_date": "2025-12-15",
   "claim_date": "2025-12-30",
   "eligible": true
 }
@@ -254,24 +235,17 @@ Incluye todos los campos de `analyze-claim` mas 9 campos adicionales de verifica
 
 **Campos adicionales:**
 
-| Campo                      | Tipo    | Requerido | Descripcion                                                          |
-| -------------------------- | ------- | --------- | -------------------------------------------------------------------- |
-| `personal_info_verified`   | boolean | Si        | Informacion personal consistente entre Salesforce, Webform y Meublex |
-| `contract_ownership`       | boolean | Si        | El agente verifico al titular del contrato                           |
-| `contract_number`          | string  | Si        | Numero de contrato (max 100 chars)                                   |
-| `salesforce_client_number` | string  | Si        | Numero de cliente en Salesforce (max 100 chars)                      |
-| `meublex_client_number`    | string  | Si        | Numero de cliente en Meublex (max 100 chars)                         |
-| `salesforce_delivery_date` | string  | Si        | Fecha de entrega en Salesforce (`YYYY-MM-DD`)                        |
-| `meublex_delivery_date`    | string  | Si        | Fecha de entrega en Meublex (`YYYY-MM-DD`)                           |
-| `claim_date`               | string  | Si        | Fecha en que se presento la reclamacion (`YYYY-MM-DD`)               |
-| `eligible`                 | boolean | Si        | Decision de elegibilidad del agente                                  |
+| Campo             | Tipo    | Requerido | Descripcion                                            |
+| ----------------- | ------- | --------- | ------------------------------------------------------ |
+| `contract_number` | string  | Si        | Numero de contrato (max 100 chars)                     |
+| `claim_date`      | string  | Si        | Fecha en que se presento la reclamacion (`YYYY-MM-DD`) |
+| `eligible`        | boolean | Si        | Decision de elegibilidad del agente                    |
 
 **Respuesta:**
 
 ```json
 {
   "claim_summary": {
-    "request_type": "Submit a Claim",
     "claim_type": "Defective, damaged product(s) or missing part(s)",
     "product_type": "Furniture",
     "damage_type": "Mechanical or Structural",
@@ -282,19 +256,13 @@ Incluye todos los campos de `analyze-claim` mas 9 campos adicionales de verifica
     "eligible_input": true
   },
   "criteria_evaluations": {
-    "personal_information_consistency": { "result": true },
-    "contract_ownership_verification": { "result": true },
-    "client_number_validation": { "result": true },
-    "delivery_date_consistency": { "result": true, "recommendation": "..." },
+    "contract_verification": { "result": "Correct", "explanation": "Contract number is provided (CN-2025-34567). IMPORTANT: Please compare the name of the person that made the ticket or claim against the data in the contract to ensure they match." },
+    "delivery_date": { "result": "In Warranty", "recommendation": "..." },
     "damage_classification_validation": {
       "result": true,
       "recommendation": "..."
     },
     "attachments_verification": { "result": true, "recommendation": "..." },
-    "warranty_eligibility_by_claim_date": {
-      "result": true,
-      "recommendation": "..."
-    },
     "eligibility_decision": { "isDecisionCorrect": true, "explanation": "..." }
   },
   "final_recommendation": "The agent handled this claim correctly...",
@@ -303,13 +271,13 @@ Incluye todos los campos de `analyze-claim` mas 9 campos adicionales de verifica
 }
 ```
 
-> **Nota:** Los criterios 1-3 solo devuelven `{"result": true/false}` sin explicacion, ya que son verificaciones deterministicas.
+> **Nota:** El criterio 1 devuelve `{"result": "Correct"/"Incorrect", "explanation": "..."}` de forma deterministica (presencia de contract_number), siempre incluye un recordatorio para que el agente compare el nombre del solicitante contra los datos del contrato.
 
 ---
 
 ### POST `/api/agent-feedback-deep/`
 
-Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multiples llamadas a herramientas de RAG para un analisis mas profundo de cada criterio (8 criterios con explicaciones detalladas).
+Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multiples llamadas a herramientas de RAG para un analisis mas profundo de cada criterio (5 criterios con explicaciones detalladas).
 
 > **Nota:** Este endpoint es mas exhaustivo pero tarda ~15-20 segundos por las multiples llamadas LLM + vector search. Para la version rapida, usar `/api/agent-feedback/`.
 
@@ -317,19 +285,18 @@ Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multi
 
 **Diferencias con `/api/agent-feedback/`:**
 
-| Aspecto               | `agent-feedback`                           | `agent-feedback-deep`           |
-| --------------------- | ------------------------------------------ | ------------------------------- |
-| Busqueda de politicas | 2 queries batch al vectorstore             | 4-5 tool calls del agente       |
-| Criterios 1-3         | 100% deterministicos (solo `true`/`false`) | LLM evalua cada uno con detalle |
-| Llamadas LLM          | 1 sola llamada `model.invoke()`            | ~6-8 (agent loop)               |
-| Tiempo estimado       | ~4-5s                                      | ~15-20s                         |
+| Aspecto              | `agent-feedback`                          | `agent-feedback-deep`           |
+| -------------------- | ----------------------------------------- | ------------------------------- |
+| Busqueda de politicas | 2 queries batch al vectorstore           | 4-5 tool calls del agente       |
+| Criterio 1           | Deterministico (`Correct`/`Incorrect` + explicacion) | LLM evalua con detalle |
+| Llamadas LLM         | 1 sola llamada `model.invoke()`           | ~6-8 (agent loop)               |
+| Tiempo estimado      | ~4-5s                                     | ~15-20s                         |
 
 **Respuesta:**
 
 ```json
 {
   "claim_summary": {
-    "request_type": "Submit a Claim",
     "claim_type": "Defective, damaged product(s) or missing part(s)",
     "product_type": "Furniture",
     "damage_type": "Mechanical or Structural",
@@ -340,22 +307,13 @@ Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multi
     "eligible_input": true
   },
   "criteria_evaluations": {
-    "personal_information_consistency": {
-      "result": true,
-      "explanation": "..."
-    },
-    "contract_ownership_verification": { "result": true, "explanation": "..." },
-    "client_number_validation": { "result": true, "explanation": "..." },
-    "delivery_date_consistency": { "result": true, "recommendation": "..." },
+    "contract_verification": { "result": "Correct", "explanation": "..." },
+    "delivery_date": { "result": "In Warranty", "recommendation": "..." },
     "damage_classification_validation": {
       "result": true,
       "recommendation": "..."
     },
     "attachments_verification": { "result": true, "recommendation": "..." },
-    "warranty_eligibility_by_claim_date": {
-      "result": true,
-      "recommendation": "..."
-    },
     "eligibility_decision": { "isDecisionCorrect": true, "explanation": "..." }
   },
   "final_recommendation": "The agent handled this claim correctly...",
@@ -364,18 +322,15 @@ Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multi
 }
 ```
 
-**Criterios de evaluacion (deep):**
+**Criterios de evaluacion (5):**
 
-| #   | Criterio                                      | Metodo                                  | Usa RAG? |
-| --- | --------------------------------------------- | --------------------------------------- | -------- |
-| 1   | Consistencia de informacion personal (Ley 25) | Boolean `personal_info_verified` + LLM  | Minimo   |
-| 2   | Verificacion de titular del contrato          | Boolean `contract_ownership` + LLM      | No       |
-| 3   | Validacion de numero de cliente               | Comparacion SF vs Meublex + LLM         | No       |
-| 4   | Consistencia de fechas de entrega             | Comparacion + RAG (politicas de plazos) | Si       |
-| 5   | Clasificacion del dano                        | LLM compara descripcion vs tipo con RAG | Si       |
-| 6   | Verificacion de adjuntos                      | Boolean + RAG (requisitos de adjuntos)  | Si       |
-| 7   | Elegibilidad por fecha de reclamacion         | Dias entre entrega y reclamacion + RAG  | Si       |
-| 8   | Decision de elegibilidad final                | LLM sintetiza los 7 criterios + RAG     | Si       |
+| #   | Criterio                         | Metodo                                  | Usa RAG? |
+| --- | -------------------------------- | --------------------------------------- | -------- |
+| 1   | Verificacion de contrato         | Verificacion de `contract_number`       | No       |
+| 2   | Fecha de entrega                 | Fechas + RAG (politicas de plazos)      | Si       |
+| 3   | Clasificacion del dano           | LLM compara descripcion vs tipo con RAG | Si       |
+| 4   | Verificacion de adjuntos         | Boolean + RAG (requisitos de adjuntos)  | Si       |
+| 5   | Decision de elegibilidad final   | LLM sintetiza los 4 criterios + RAG     | Si       |
 
 ---
 
@@ -427,18 +382,14 @@ curl -X POST http://localhost:8000/api/chat/ \
 curl -X POST http://localhost:8000/api/analyze-claim/ \
   -H "Content-Type: application/json" \
   -d '{
-    "request_type": "Submit a Claim",
     "claim_type": "Defective, damaged product(s) or missing part(s)",
-    "multiple_products_damaged": false,
     "damage_type": "Mechanical or Structural",
     "delivery_date": "2025-12-15",
     "product_type": "Furniture",
     "manufacturer": "Ashley Furniture",
     "store_of_purchase": "MueblesRD Santo Domingo",
     "product_code": "ASH-TBL-4521",
-    "purchase_confirmation_number": "CONF-2025-00981",
     "description": "The dining table leg snapped off during normal use two weeks after delivery.",
-    "data_sharing_consent": true,
     "has_attachments": true
   }'
 ```
@@ -449,26 +400,16 @@ curl -X POST http://localhost:8000/api/analyze-claim/ \
 curl -X POST http://localhost:8000/api/agent-feedback/ \
   -H "Content-Type: application/json" \
   -d '{
-    "request_type": "Submit a Claim",
     "claim_type": "Defective, damaged product(s) or missing part(s)",
-    "multiple_products_damaged": false,
     "damage_type": "Mechanical or Structural",
     "delivery_date": "2025-12-15",
     "product_type": "Furniture",
     "manufacturer": "Ashley Furniture",
     "store_of_purchase": "MueblesRD Santo Domingo",
     "product_code": "ASH-TBL-4521",
-    "purchase_confirmation_number": "CONF-2025-00981",
     "description": "The dining table leg snapped off during normal use two weeks after delivery.",
-    "data_sharing_consent": true,
     "has_attachments": true,
-    "personal_info_verified": true,
-    "contract_ownership": true,
     "contract_number": "CN-2025-34567",
-    "salesforce_client_number": "SF-CL-9876",
-    "meublex_client_number": "SF-CL-9876",
-    "salesforce_delivery_date": "2025-12-15",
-    "meublex_delivery_date": "2025-12-15",
     "claim_date": "2025-12-30",
     "eligible": true
   }'
