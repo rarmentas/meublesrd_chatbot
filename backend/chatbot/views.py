@@ -242,18 +242,14 @@ class ClaimAnalysisView(APIView):
             OpenApiExample(
                 "Reclamación mesa dañada",
                 value={
-                    "request_type": "Submit a Claim",
                     "claim_type": "Defective, damaged product(s) or missing part(s)",
-                    "multiple_products_damaged": False,
                     "damage_type": "Mechanical or Structural",
                     "delivery_date": "2025-12-15",
                     "product_type": "Furniture",
                     "manufacturer": "Ashley Furniture",
                     "store_of_purchase": "MueblesRD Santo Domingo",
                     "product_code": "ASH-TBL-4521",
-                    "purchase_confirmation_number": "CONF-2025-00981",
                     "description": "The dining table leg snapped off during normal use two weeks after delivery.",
-                    "data_sharing_consent": True,
                     "has_attachments": True,
                 },
                 request_only=True,
@@ -262,18 +258,14 @@ class ClaimAnalysisView(APIView):
             OpenApiExample(
                 "Producto faltante",
                 value={
-                    "request_type": "Submit a Claim",
                     "claim_type": "Error or Missing Product",
-                    "multiple_products_damaged": False,
                     "damage_type": "Missing Part(s)",
                     "delivery_date": "2026-01-10",
                     "product_type": "Furniture",
                     "manufacturer": "Generic",
                     "store_of_purchase": "MueblesRD",
                     "product_code": "XYZ-001",
-                    "purchase_confirmation_number": "CONF-2026-00001",
                     "description": "Missing two screws and one shelf from the bookshelf. Delivery was last week.",
-                    "data_sharing_consent": True,
                     "has_attachments": False,
                 },
                 request_only=True,
@@ -318,38 +310,28 @@ class AgentFeedbackInputSerializer(ClaimAnalysisInputSerializer):
 
 # Ejemplo de body compartido para agent-feedback y agent-feedback-deep
 AGENT_FEEDBACK_REQUEST_EXAMPLE = {
-    "request_type": "Submit a Claim",
     "claim_type": "Defective, damaged product(s) or missing part(s)",
-    "multiple_products_damaged": False,
     "damage_type": "Mechanical or Structural",
     "delivery_date": "2025-12-15",
     "product_type": "Furniture",
     "manufacturer": "Ashley Furniture",
     "store_of_purchase": "MueblesRD Santo Domingo",
     "product_code": "ASH-TBL-4521",
-    "purchase_confirmation_number": "CONF-2025-00981",
     "description": "The dining table leg snapped off during normal use two weeks after delivery.",
-    "data_sharing_consent": True,
     "has_attachments": True,
-    "personal_info_verified": True,
-    "contract_ownership": True,
     "contract_number": "CN-2025-34567",
-    "salesforce_client_number": "SF-CL-9876",
-    "meublex_client_number": "SF-CL-9876",
-    "salesforce_delivery_date": "2025-12-15",
-    "meublex_delivery_date": "2025-12-15",
     "claim_date": "2025-12-30",
     "eligible": True,
 }
 
 
 class AgentFeedbackView(APIView):
-    """POST /api/agent-feedback-deep/ - Evaluate agent's claim handling across 8 criteria (exhaustive, multi-step agent)."""
+    """POST /api/agent-feedback-deep/ - Evaluate agent's claim handling across 5 criteria (exhaustive, multi-step agent)."""
 
     @extend_schema(
         tags=["Evaluación de agente"],
         summary="Evaluación de agente exhaustiva (deep)",
-        description="Evalúa el manejo de una reclamación por parte de un agente. Versión exhaustiva: agente LangChain con múltiples llamadas RAG, 8 criterios con explicaciones detalladas. Tiempo estimado ~15-20 s. Para versión rápida (~4-5 s) usar POST /api/agent-feedback/.",
+        description="Evalúa el manejo de una reclamación por parte de un agente. Versión exhaustiva: agente LangChain con múltiples llamadas RAG, 5 criterios con explicaciones detalladas. Tiempo estimado ~15-20 s. Para versión rápida (~4-5 s) usar POST /api/agent-feedback/.",
         request=AgentFeedbackInputSerializer,
         responses={
             200: AgentFeedbackResponseSerializer,
@@ -364,15 +346,14 @@ class AgentFeedbackView(APIView):
                 description="Datos alineados (fechas, números). Testing: esperar criteria_evaluations con result true y final_eligibility isEligible true.",
             ),
             OpenApiExample(
-                "Fechas inconsistentes",
+                "Reclamación tardía",
                 value={
                     **AGENT_FEEDBACK_REQUEST_EXAMPLE,
-                    "delivery_date": "2025-12-15",
-                    "salesforce_delivery_date": "2025-12-20",
-                    "meublex_delivery_date": "2025-12-15",
+                    "delivery_date": "2025-06-01",
+                    "claim_date": "2026-02-15",
                 },
                 request_only=True,
-                description="Testing: delivery_date vs Salesforce/Meublex distintas; revisar delivery_date_consistency.",
+                description="Testing: gran diferencia entre delivery_date y claim_date; revisar delivery_date (warranty).",
             ),
         ],
     )
@@ -405,7 +386,7 @@ class AgentFeedbackOptimizedView(APIView):
     @extend_schema(
         tags=["Evaluación de agente"],
         summary="Evaluación de agente optimizada",
-        description="Evalúa el manejo de una reclamación por parte de un agente. Versión optimizada: queries batch al vectorstore y una sola llamada LLM (~4-5 s). Mismos 8 criterios que la versión deep pero criterios 1-3 solo devuelven true/false. Para análisis exhaustivo con explicaciones use POST /api/agent-feedback-deep/.",
+        description="Evalúa el manejo de una reclamación por parte de un agente. Versión optimizada: queries batch al vectorstore y una sola llamada LLM (~4-5 s). Mismos 5 criterios que la versión deep. Para análisis exhaustivo con explicaciones use POST /api/agent-feedback-deep/.",
         request=AgentFeedbackInputSerializer,
         responses={
             200: AgentFeedbackResponseSerializer,

@@ -128,8 +128,8 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Muebles RD Chatbot API',
     'DESCRIPTION': (
         'API REST para soporte de servicio al cliente de MueblesRD: RAG (LangChain, Pinecone, OpenAI), '
-        'análisis de reclamaciones y evaluación de agentes. '
-        'Endpoints: GET /api/health/, POST /api/chat/, POST /api/analyze-claim/, '
+        'análisis de reclamaciones y evaluación de agentes (5 criterios). '
+        'Endpoints: GET /api/health/, POST /api/chat/, POST /api/analyze-claim/ (9 campos), '
         'POST /api/agent-feedback/ (optimizado ~4-5s), POST /api/agent-feedback-deep/ (exhaustivo ~15-20s), '
         'POST /api/auth/token/. Autenticación por token o Basic (salvo health, docs y auth/token).'
     ),

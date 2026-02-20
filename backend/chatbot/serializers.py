@@ -76,7 +76,6 @@ class TokenResponseSerializer(serializers.Serializer):
 class ClaimSummarySerializer(serializers.Serializer):
     """Resumen de la reclamación en la respuesta de analyze-claim."""
 
-    request_type = serializers.CharField()
     claim_type = serializers.CharField()
     product_type = serializers.CharField()
     damage_type = serializers.CharField()
@@ -128,7 +127,6 @@ class ClaimAnalysisResponseSerializer(serializers.Serializer):
 class AgentClaimSummarySerializer(serializers.Serializer):
     """Resumen de reclamación en la respuesta de agent-feedback."""
 
-    request_type = serializers.CharField()
     claim_type = serializers.CharField()
     product_type = serializers.CharField()
     damage_type = serializers.CharField()
@@ -144,11 +142,10 @@ class AgentFeedbackResponseSerializer(serializers.Serializer):
 
     claim_summary = AgentClaimSummarySerializer()
     criteria_evaluations = serializers.DictField(
-        help_text="Evaluación por criterio: personal_information_consistency, "
-                  "contract_ownership_verification, client_number_validation, "
-                  "delivery_date_consistency, damage_classification_validation, "
-                  "attachments_verification, warranty_eligibility_by_claim_date, "
-                  "eligibility_decision. Cada uno tiene result y/o recommendation/explanation."
+        help_text="Evaluación por criterio (5): contract_verification, "
+                  "delivery_date, damage_classification_validation, "
+                  "attachments_verification, eligibility_decision. "
+                  "Cada uno tiene result y recommendation/explanation."
     )
     final_recommendation = serializers.CharField()
     final_eligibility = serializers.DictField(
