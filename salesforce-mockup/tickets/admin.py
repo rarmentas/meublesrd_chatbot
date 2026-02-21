@@ -1,18 +1,11 @@
 from django.contrib import admin
-from .models import Contact, Requete
-
-
-@admin.register(Contact)
-class ContactAdmin(admin.ModelAdmin):
-    list_display = ('nom_complet', 'adresse_email', 'telephone_mobile')
-    search_fields = ('nom_complet', 'adresse_email')
+from .models import Requete
 
 
 @admin.register(Requete)
 class RequeteAdmin(admin.ModelAdmin):
-    list_display = ('numero', 'objet', 'statut', 'priorite', 'contact', 'date_ouverture')
-    list_filter = ('statut', 'priorite')
-    search_fields = ('numero', 'objet', 'description')
-    raw_id_fields = ('contact',)
-    date_hierarchy = 'date_ouverture'
+    list_display = ('numero', 'claim_type', 'store_of_purchase', 'product_type', 'claim_date')
+    list_filter = ('claim_type', 'product_type')
+    search_fields = ('numero', 'claim_type', 'description', 'purchase_contract_number')
+    date_hierarchy = 'claim_date'
     readonly_fields = ('created_at', 'updated_at')

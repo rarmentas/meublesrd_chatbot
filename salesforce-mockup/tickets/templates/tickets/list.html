@@ -15,10 +15,12 @@
         <thead class="table-light">
           <tr>
             <th>{% trans "Numéro" %}</th>
-            <th>{% trans "Objet" %}</th>
-            <th>{% trans "Statut" %}</th>
-            <th>{% trans "Priorité" %}</th>
-            <th>{% trans "Contact" %}</th>
+            <th>{% trans "Classification" %}</th>
+            <th>{% trans "Description" %}</th>
+            <th>{% trans "Magasin" %}</th>
+            <th>{% trans "Type de produit" %}</th>
+            <th>{% trans "Manufacturier" %}</th>
+            <th>{% trans "Code de produit" %}</th>
             <th>{% trans "Date d'ouverture" %}</th>
             <th></th>
           </tr>
@@ -27,18 +29,20 @@
           {% for ticket in tickets %}
           <tr>
             <td><strong>{{ ticket.numero }}</strong></td>
-            <td>{{ ticket.objet|truncatewords:8 }}</td>
-            <td><span class="badge bg-secondary">{{ ticket.get_statut_display }}</span></td>
-            <td>{{ ticket.get_priorite_display }}</td>
-            <td>{% if ticket.contact %}{{ ticket.contact.nom_complet }}{% else %}—{% endif %}</td>
-            <td>{% if ticket.date_ouverture %}{{ ticket.date_ouverture|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+            <td>{{ ticket.claim_type|default:"—" }}</td>
+            <td>{{ ticket.description|default:"—"|truncatewords:8 }}</td>
+            <td>{{ ticket.store_of_purchase|default:"—" }}</td>
+            <td>{{ ticket.product_type|default:"—" }}</td>
+            <td>{{ ticket.manufacturer|default:"—" }}</td>
+            <td>{{ ticket.product_code|default:"—" }}</td>
+            <td>{% if ticket.claim_date %}{{ ticket.claim_date|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
             <td>
               <a href="{% url 'tickets:detail' ticket.numero %}" class="btn btn-sm btn-outline-primary">{% trans "Voir" %}</a>
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="7" class="text-center text-muted py-4">{% trans "Aucune requête. Ajoutez des exemples depuis l’admin Django." %}</td>
+            <td colspan="9" class="text-center text-muted py-4">{% trans "Aucune requête. Ajoutez des exemples depuis l'admin Django." %}</td>
           </tr>
           {% endfor %}
         </tbody>
