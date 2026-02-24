@@ -5,6 +5,8 @@ const WINDOW_MIN = { width: 240, height: 48 };
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    let currentTicketContext = null;
+
     const analyzeBtn = document.getElementById("analyzeBtn");
     const resultDiv = document.getElementById("result");
     const chatInput = document.getElementById("chatInput");
@@ -212,6 +214,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const fields = response.fields || {};
 
+                currentTicketContext = fields;
+
                 const payload = {
                     claim_type: fields.classification || "",
                     damage_type: fields.damageType || "",
@@ -295,12 +299,42 @@ document.addEventListener("DOMContentLoaded", () => {
         showTyping("Thinking...");
 
         try {
-            /* Construir query con toda la conversación para chat efectivo */
-            const queryWithHistory = conversationHistory.length > 1
-                ? conversationHistory.map(m =>
-                    m.role === "user" ? `User: ${m.content}` : `Assistant: ${m.content}`
-                ).join("\n\n")
-                : message;
+            /* Construir query con toda la conversación y con datos del ticket para chat efectivo */
+            let caseContextBlock = "";
+
+	    if (currentTicketContext) {
+    		caseContextBlock = `
+	    Current Case Information:
+	    - Subject: ${currentTicketContext.subject || ""}
+	    - Classification: ${currentTicketContext.classification || ""}
+	    - Damage Type: ${currentTicketContext.damageType || ""}
+	    - Delivery Date: ${currentTicketContext.date || ""}
+	    - Open Date: ${currentTicketContext.openDate || ""}
+	    - Manufacturer: ${currentTicketContext.manufacturer || ""}
+	    - Product Code: ${currentTicketContext.productCode || ""}
+	    - Store: ${currentTicketContext.store || ""}
+	    - Description: ${currentTicketContext.description || ""}
+
+	    `;
+	    }
+
+	    const conversationText = conversationHistory.length > 1
+    	    ? conversationHistory.map(m =>
+        	    m.role === "user" ? `User: ${m.content}` : `Assistant: ${m.content}`
+    	    ).join("\n\n")
+    	    : message;
+
+	    const queryWithHistory = `
+	    You are assisting a service agent analyzing a customer claim.
+
+	    ${caseContextBlock}
+
+	    Conversation:
+	    ${conversationText}
+
+	    User question:
+	    ${message}
+	    `;
 
             const response = await fetch(
                 "https://api.gac.asware.com.mx/api/chat/", 
