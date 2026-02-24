@@ -1,33 +1,12 @@
 {
   "manifest_version": 3,
   "name": "MeublesRD Service Assistant",
-  "version": "1.2",
+  "version": "1.5",
   "description": "Contextual assistant for service agents",
-
-  "permissions": [
-    "activeTab",
-    "scripting"
-  ],
-
-  "host_permissions": [
-    "https://mockup.gac.asware.com.mx/*",
-    "https://api.gac.asware.com.mx/*"
-  ],
-
-  "background": {
-    "service_worker": "background.js"
-  },
-
-  "action": {
-    "default_popup": "popup.html"
-  },
-
-  "content_scripts": [
-    {
-      "matches": ["https://mockup.gac.asware.com.mx/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ]
+  "permissions": ["activeTab", "scripting", "storage", "tabs", "sidePanel"],
+  "host_permissions": ["https://mockup.gac.asware.com.mx/*", "https://api.gac.asware.com.mx/*"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_title": "Open MeublesRD Assistant"},
+  "side_panel": {"default_path": "popup.html"},
+  "content_scripts": [{"matches": ["https://mockup.gac.asware.com.mx/*"], "js": ["content.js"], "run_at": "document_idle"}]
 }
-

@@ -12,12 +12,62 @@
             width: 360px;
         }
 
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .header {
             background-color: #b5121b;
             color: white;
             padding: 14px;
             font-size: 16px;
             font-weight: bold;
+        }
+
+        .header-title { flex: 1; }
+
+        .btn-minimize {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .btn-minimize:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        .minimized-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #b5121b;
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-restore {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .btn-restore:hover {
+            background: rgba(255,255,255,0.35);
         }
 
         .subheader {
@@ -49,6 +99,31 @@
         /* Chat Section */
         .chat-section {
             margin-top: 15px;
+        }
+
+        .chatbot-input {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 10px;
+        }
+
+        .chatbot-input textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 13px;
+            font-family: inherit;
+            box-sizing: border-box;
+            resize: vertical;
+            max-height: 200px;
+        }
+
+        .chatbot-input textarea:focus {
+            outline: none;
+            border-color: #b5121b;
         }
 
         .chat-input {
@@ -133,17 +208,45 @@
             color: #666;
             font-style: italic;
         }
+
+        .loading-spinner {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-top-color: #b5121b;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 
 <body>
 
-    <div class="header">
-        Meubles RD<br>
-        <span class="subheader">Service Assistant</span>
+    <div class="header header-bar">
+        <div class="header-title">
+            Meubles RD<br>
+            <span class="subheader">Service Assistant</span>
+        </div>
+        <button id="minimizeBtn" class="btn-minimize" title="Minimize">−</button>
     </div>
 
-    <div class="container">
+    <div id="minimizedBar" class="minimized-bar" style="display:none;">
+        <span class="minimized-title">Meubles RD</span>
+        <button id="restoreBtn" class="btn-restore" title="Restore">□</button>
+    </div>
+
+    <div id="mainContent" class="container">
 
         <button id="analyzeBtn" class="button-primary">
             Analyze Screen
@@ -151,25 +254,14 @@
 
         <!-- Chat Section -->
         <div class="chatbot-container">
+            <div id="result" class="chatbot-messages result-container">
+                <p class="loading">Click "Analyze Screen" to evaluate the current case.</p>
+            </div>
 
-    		  		
-
-    		<div id="result" class="chatbot-messages">
-        		<div class="result-box">
-            		Click "Analyze Screen" to evaluate the current case.
-        		</div>
-    		</div>
-
-    		<div class="chatbot-input">
-        		<input type="text" id="chatInput" placeholder="Ask a question about this case..." />
-        		<button id="sendMessageBtn">Send Message</button>
-    		</div>
-
-		</div>
-
-
-        <div id="result" class="result-container">
-            <p class="loading">Click "Analyze Screen" or ask a question to begin.</p>
+            <div class="chatbot-input">
+                <textarea id="chatInput" placeholder="Ask a question about this case..." rows="4"></textarea>
+                <button id="sendMessageBtn">Send Message</button>
+            </div>
         </div>
 
     </div>

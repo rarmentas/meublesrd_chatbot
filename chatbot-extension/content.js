@@ -2,31 +2,28 @@ console.log("Content script successfully injected.");
 
 console.log("MeublesRD Assistant content script loaded.");
 
+/** Valores a ignorar: la página repite campos con "Not used for copilot" en secciones resumidas */
+const SKIP_VALUES = ["Not used for copilot", ""];
+
 /**
- * Extract ticket main fields
+ * Extract ticket main fields.
+ * Si hay varios rows con el mismo label, prefiere el que tenga contenido real (no "Not used for copilot").
  */
 function getFieldValue(labelText) {
     const rows = document.querySelectorAll('.field-row');
 
     for (let row of rows) {
         const label = row.querySelector('.field-label')?.innerText?.trim();
+        if (label !== labelText) continue;
 
-        if (label === labelText) {
+        const rowClone = row.cloneNode(true);
+        rowClone.querySelector('.field-label')?.remove();
+        rowClone.querySelectorAll('i').forEach(el => el.remove());
+        const valueText = rowClone.innerText.trim();
 
-            // Clone row to safely manipulate
-            const rowClone = row.cloneNode(true);
-
-            // Remove label and icon
-            rowClone.querySelector('.field-label')?.remove();
-            rowClone.querySelector('i')?.remove();
-
-            // Get remaining text content
-            const valueText = rowClone.innerText.trim();
-
-            return valueText;
-        }
+        if (!valueText || SKIP_VALUES.includes(valueText)) continue;
+        return valueText;
     }
-
     return "";
 }
 

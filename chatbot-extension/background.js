@@ -1,4 +1,7 @@
-// JavaScript source code
+// Side Panel: siempre visible en la barra lateral aunque hagas click en el navegador
+chrome.sidePanel
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((err) => console.error("[MeublesRD] setPanelBehavior:", err));
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.type === "SEND_TO_BACKEND") {

@@ -142,10 +142,22 @@ Select the extension project folder
 The MeublesRD Service Assistant icon will appear in the toolbar
 
 
+Updating an Already Installed Extension
+
+If you already have the extension installed and want to use the latest version:
+
+1. Make sure you have saved all changes to the extension files
+2. Open Chrome and go to chrome://extensions
+3. Enable Developer mode (toggle in the top right)
+4. Find "MeublesRD Service Assistant" in the list
+5. Click the circular refresh icon (🔄) on the extension card
+6. The extension will reload with the new code
+
+No need to remove and re-add the extension. The refresh button updates it in place.
+
+
 Known Limitations
 
-Extracted page data is not yet fully mapped into the backend payload (some values are currently hardcoded)
-Chat input is present in the UI but not fully implemented as a conversational feature
 Credentials are embedded in client-side code
 CSS is partially duplicated between inline styles and popup.css
 
@@ -161,7 +173,7 @@ It is best suited for controlled environments (internal tools, mockups, demos) a
 
 Version
 
-Current version: 1.1
+Current version: 1.3
 
 
 Disclaimer
