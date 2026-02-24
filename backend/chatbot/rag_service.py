@@ -228,12 +228,14 @@ Customer Message:
 Your task is to:
 1. First retrieve relevant policies for the claim type and damage type
 2. Analyze the customer's message tone
-3. Combine both analyses to provide structured recommendations
+3. Evaluate whether attachments (photos/evidence) are required by policy for this type of claim and whether they have been provided
+4. Combine all analyses to provide structured recommendations
 
 Based on your analysis, provide recommendations including:
 - Policy-based recommendations with specific section references
 - Communication approach based on tone (standard/empathetic/de-escalation/formal)
 - Ordered next steps for the customer service agent
+- Whether the provided attachments status is adequate per policy
 
 IMPORTANT: When citing sources, use policy section names, never PDF filenames.
 
@@ -248,7 +250,11 @@ Return your final response as valid JSON with this exact structure:
         "tips": ["tip1", "tip2"],
         "suggested_opening": "..."
     },
-    "next_steps": ["step1", "step2"]
+    "next_steps": ["step1", "step2"],
+    "attachments_verification": {
+        "result": true or false,
+        "recommendation": "one sentence explaining whether attachments are adequate or what is needed"
+    }
 }"""
 
     agent = create_agent(model, tools=[retrieve_policies, analyze_tone], system_prompt=system_prompt)
@@ -259,7 +265,8 @@ Return your final response as valid JSON with this exact structure:
 Please:
 1. Retrieve policies relevant to "{claim_data["claim_type"]}" with "{claim_data["damage_type"]}" damage on "{claim_data["product_type"]}"
 2. Analyze the tone of the customer message
-3. Provide structured recommendations in JSON format"""
+3. Evaluate whether attachments are required by policy for this claim type and whether they have been provided (Has Attachments: {"Yes" if claim_data["has_attachments"] else "No"})
+4. Provide structured recommendations in JSON format"""
 
     response = agent.invoke({"messages": [{"role": "user", "content": user_message}]})
 
@@ -291,7 +298,11 @@ Please:
                 "suggested_opening": ""
             },
             "next_steps": [],
-            "tone_analysis": {"tone": "neutral", "confidence": 0.5, "indicators": []}
+            "tone_analysis": {"tone": "neutral", "confidence": 0.5, "indicators": []},
+            "attachments_verification": {
+                "result": claim_data["has_attachments"],
+                "recommendation": "Unable to parse LLM response. Please review attachments manually."
+            }
         }
 
     # Build final response
@@ -300,12 +311,17 @@ Please:
             "claim_type": claim_data["claim_type"],
             "product_type": claim_data["product_type"],
             "damage_type": claim_data["damage_type"],
-            "days_since_delivery": days_since_delivery
+            "days_since_delivery": days_since_delivery,
+            "has_attachments": claim_data["has_attachments"]
         },
         "tone_analysis": parsed.get("tone_analysis", {}),
         "policy_recommendations": parsed.get("policy_recommendations", []),
         "communication_recommendations": parsed.get("communication_recommendations", {}),
         "next_steps": parsed.get("next_steps", []),
+        "attachments_verification": parsed.get("attachments_verification", {
+            "result": claim_data["has_attachments"],
+            "recommendation": "No attachment evaluation available."
+        }),
         "sources": _extract_sources_from_docs(context_docs)
     }
 
