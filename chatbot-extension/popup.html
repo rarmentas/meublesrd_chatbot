@@ -1,30 +1,180 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<title>Meubles RD Chatbot</title>
-<link rel="stylesheet" href="popup.css" />
+    <meta charset="UTF-8">
+    <title>Meubles RD Assistant</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f4f6f9;
+            width: 360px;
+        }
+
+        .header {
+            background-color: #b5121b;
+            color: white;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .subheader {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .container {
+            padding: 15px;
+        }
+
+        .button-primary {
+            width: 100%;
+            padding: 10px;
+            background-color: #b5121b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .button-primary:hover {
+            background-color: #8f0e14;
+        }
+
+        /* Chat Section */
+        .chat-section {
+            margin-top: 15px;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 13px;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+
+        .chat-button {
+            width: 100%;
+            padding: 8px;
+            background-color: #333;
+            color: black;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .chat-button:hover {
+            background-color: #000;
+        }
+
+        .result-container {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            max-height: 350px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .result-container h3 {
+            margin-top: 10px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #b5121b;
+        }
+
+        .result-container h4 {
+            margin-top: 8px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .result-container p {
+            margin: 4px 0;
+        }
+
+        .divider {
+            margin: 10px 0;
+            border-top: 1px solid #eee;
+        }
+
+        .status-eligible {
+            background-color: #e6f4ea;
+            color: #1e7e34;
+            padding: 6px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .status-not-eligible {
+            background-color: #fdecea;
+            color: #c82333;
+            padding: 6px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
 </head>
+
 <body>
-<div class="chatbot-container">
-<header class="chatbot-header">
-<h1>Meubles RD</h1>
-<span>Service Assistant</span>
-</header>
+
+    <div class="header">
+        Meubles RD<br>
+        <span class="subheader">Service Assistant</span>
+    </div>
+
+    <div class="container">
+
+        <button id="analyzeBtn" class="button-primary">
+            Analyze Screen
+        </button>
+
+        <!-- Chat Section -->
+        <div class="chatbot-container">
+
+    		  		
+
+    		<div id="result" class="chatbot-messages">
+        		<div class="result-box">
+            		Click "Analyze Screen" to evaluate the current case.
+        		</div>
+    		</div>
+
+    		<div class="chatbot-input">
+        		<input type="text" id="chatInput" placeholder="Ask a question about this case..." />
+        		<button id="sendMessageBtn">Send Message</button>
+    		</div>
+
+		</div>
 
 
-<div class="chatbot-messages">
-<div class="message bot">Hello 👋 How can I help you today?</div>
-</div>
+        <div id="result" class="result-container">
+            <p class="loading">Click "Analyze Screen" or ask a question to begin.</p>
+        </div>
 
+    </div>
 
-<div class="chatbot-input">
-<input type="text" placeholder="Type your message…" disabled />
-<button disabled>Send</button>
-</div>
-</div>
+    <script src="popup.js"></script>
 
-
-<script src="popup.js"></script>
 </body>
 </html>

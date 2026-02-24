@@ -33,6 +33,7 @@ function getFieldValue(labelText) {
 function extractFields() {
     return {
         subject: getFieldValue("Subject"),
+        classification: getFieldValue("Classification"),
         priority: getFieldValue("Priority"),
         status: getFieldValue("Status"),
         description: getFieldValue("Description"),
@@ -41,7 +42,15 @@ function extractFields() {
 	store: getFieldValue("Store"),
 	account: getFieldValue("Account name"),
 	date: getFieldValue("Delivery date"),
-	maccount: getFieldValue("Meublex customer account number")
+	maccount: getFieldValue("Meublex customer account number"),
+        damageType: getFieldValue("Damage type"),
+        productType: getFieldValue("Product type"),
+        productCode: getFieldValue("Product code"),
+        contract: getFieldValue("Purchase contract number"),
+        manufacturer: getFieldValue("Manufacturer"),
+        openDate: getFieldValue("Open date:")
+
+
 
     };
 }

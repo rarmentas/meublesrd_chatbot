@@ -1,12 +1,33 @@
 {
-"manifest_version": 3,
-"name": "Meubles RD Chatbot",
-"description": "Basic chatbot UI for Salesforce Claims View",
-"version": "0.1.0",
-"action": {
-"default_popup": "popup.html"
-},
-"icons": {
-"128": "icon.png"
+  "manifest_version": 3,
+  "name": "MeublesRD Service Assistant",
+  "version": "1.2",
+  "description": "Contextual assistant for service agents",
+
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "https://mockup.gac.asware.com.mx/*",
+    "https://api.gac.asware.com.mx/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "action": {
+    "default_popup": "popup.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://mockup.gac.asware.com.mx/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
 }
-}
+
