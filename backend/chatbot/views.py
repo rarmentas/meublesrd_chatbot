@@ -10,6 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from drf_spectacular.utils import extend_schema, OpenApiExample
 
 from .rag_service import run_llm, analyze_claim, evaluate_agent_feedback, evaluate_agent_feedback_optimized
+from .claim_type_validator import validate_claim_type as check_claim_type
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 
@@ -194,18 +195,6 @@ class ChatView(APIView):
 class ClaimAnalysisInputSerializer(serializers.Serializer):
     """Serializer for claim analysis input validation."""
 
-    CLAIM_TYPE_CHOICES = [
-        ("Defective, damaged product(s) or missing part(s)",
-         "Defective, damaged product(s) or missing part(s)"),
-        ("Error or Missing Product", "Error or Missing Product"),
-        ("Home Damage or Delivery Complaint", "Home Damage or Delivery Complaint"),
-        ("ComfoRD Warranty - Mattresses", "ComfoRD Warranty - Mattresses"),
-    ]
-    DAMAGE_TYPE_CHOICES = [
-        ("Aesthetics", "Aesthetics"),
-        ("Mechanical or Structural", "Mechanical or Structural"),
-        ("Missing Part(s)", "Missing Part(s)"),
-    ]
     PRODUCT_TYPE_CHOICES = [
         ("Appliances", "Appliances"),
         ("Barbecue", "Barbecue"),
@@ -214,8 +203,8 @@ class ClaimAnalysisInputSerializer(serializers.Serializer):
         ("Furniture", "Furniture"),
     ]
 
-    claim_type = serializers.ChoiceField(choices=CLAIM_TYPE_CHOICES)
-    damage_type = serializers.ChoiceField(choices=DAMAGE_TYPE_CHOICES)
+    claim_type = serializers.CharField(max_length=200)
+    damage_type = serializers.CharField(max_length=200)
     delivery_date = serializers.DateField()
     product_type = serializers.ChoiceField(choices=PRODUCT_TYPE_CHOICES)
     manufacturer = serializers.CharField(max_length=100)
@@ -223,6 +212,12 @@ class ClaimAnalysisInputSerializer(serializers.Serializer):
     product_code = serializers.CharField(max_length=50)
     description = serializers.CharField(min_length=10, max_length=5000)
     has_attachments = serializers.BooleanField()
+
+    def validate_claim_type(self, value):
+        is_valid, error_message = check_claim_type(value)
+        if not is_valid:
+            raise serializers.ValidationError(error_message)
+        return value
 
 
 class ClaimAnalysisView(APIView):

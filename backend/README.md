@@ -66,7 +66,8 @@ backend_django/
 └── chatbot/                    # App principal
     ├── urls.py                 # Rutas de endpoints
     ├── views.py                # Vistas (serializers + API views)
-    └── rag_service.py          # Pipeline RAG (LangChain + Pinecone + OpenAI)
+    ├── rag_service.py          # Pipeline RAG (LangChain + Pinecone + OpenAI)
+    └── claim_type_validator.py # Validacion semantica de claim_type via LLM
 ```
 
 **Servicios externos:**
@@ -147,7 +148,7 @@ Analiza una reclamacion de cliente: busca politicas relevantes, analiza el tono 
 
 ```json
 {
-  "claim_type": "Defective, damaged product(s) or missing part(s)",
+  "claim_type": "Defective product - broken leg",
   "damage_type": "Mechanical or Structural",
   "delivery_date": "2025-12-15",
   "product_type": "Furniture",
@@ -159,27 +160,28 @@ Analiza una reclamacion de cliente: busca politicas relevantes, analiza el tono 
 }
 ```
 
-| Campo              | Tipo    | Requerido | Valores permitidos                                                                                                                                           |
-| ------------------ | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `claim_type`       | string  | Si        | `"Defective, damaged product(s) or missing part(s)"`, `"Error or Missing Product"`, `"Home Damage or Delivery Complaint"`, `"ComfoRD Warranty - Mattresses"` |
-| `damage_type`      | string  | Si        | `"Aesthetics"`, `"Mechanical or Structural"`, `"Missing Part(s)"`                                                                                            |
-| `delivery_date`    | string  | Si        | Formato `YYYY-MM-DD`                                                                                                                                         |
-| `product_type`     | string  | Si        | `"Furniture"`, `"Appliances"`, `"Barbecue"`, `"Electronics"`, `"Mattresses"`                                                                                 |
-| `manufacturer`     | string  | Si        | Texto libre (max 100 chars)                                                                                                                                  |
-| `store_of_purchase` | string | Si        | Texto libre (max 100 chars)                                                                                                                                  |
-| `product_code`     | string  | Si        | Texto libre (max 50 chars)                                                                                                                                   |
-| `description`      | string  | Si        | Descripcion del problema (10-5000 chars)                                                                                                                     |
-| `has_attachments`  | boolean | Si        | `true` / `false`                                                                                                                                             |
+| Campo               | Tipo    | Requerido | Valores permitidos                                                                                                                                                                           |
+| ------------------- | ------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `claim_type`        | string  | Si        | Texto libre (max 200 chars). Validacion semantica: acepta reclamos por productos defectuosos, dañados o partes faltantes; rechaza quejas de entrega, daños al hogar y garantias de colchones |
+| `damage_type`       | string  | Si        | `"Aesthetics"`, `"Mechanical or Structural"`, `"Missing Part(s)"`                                                                                                                            |
+| `delivery_date`     | string  | Si        | Formato `YYYY-MM-DD`                                                                                                                                                                         |
+| `product_type`      | string  | Si        | `"Furniture"`, `"Appliances"`, `"Barbecue"`, `"Electronics"`, `"Mattresses"`                                                                                                                 |
+| `manufacturer`      | string  | Si        | Texto libre (max 100 chars)                                                                                                                                                                  |
+| `store_of_purchase` | string  | Si        | Texto libre (max 100 chars)                                                                                                                                                                  |
+| `product_code`      | string  | Si        | Texto libre (max 50 chars)                                                                                                                                                                   |
+| `description`       | string  | Si        | Descripcion del problema (10-5000 chars)                                                                                                                                                     |
+| `has_attachments`   | boolean | Si        | `true` / `false`                                                                                                                                                                             |
 
 **Respuesta:**
 
 ```json
 {
   "claim_summary": {
-    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "claim_type": "Defective product - broken leg",
     "product_type": "Furniture",
     "damage_type": "Mechanical or Structural",
-    "days_since_delivery": 45
+    "days_since_delivery": 45,
+    "has_attachments": true
   },
   "tone_analysis": {
     "tone": "neutral",
@@ -202,6 +204,10 @@ Analiza una reclamacion de cliente: busca politicas relevantes, analiza el tono 
     "Verify contract number in Salesforce",
     "Request photos of the damage"
   ],
+  "attachments_verification": {
+    "result": true,
+    "recommendation": "Photos have been provided as required by policy for mechanical damage claims."
+  },
   "sources": ["4. Respecting Deadlines", "5.1 Validation of Damage Type"]
 }
 ```
@@ -218,7 +224,7 @@ Incluye todos los campos de `analyze-claim` mas 3 campos adicionales de verifica
 
 ```json
 {
-  "claim_type": "Defective, damaged product(s) or missing part(s)",
+  "claim_type": "Defective product - broken leg",
   "damage_type": "Mechanical or Structural",
   "delivery_date": "2025-12-15",
   "product_type": "Furniture",
@@ -246,7 +252,7 @@ Incluye todos los campos de `analyze-claim` mas 3 campos adicionales de verifica
 ```json
 {
   "claim_summary": {
-    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "claim_type": "Defective product - broken leg",
     "product_type": "Furniture",
     "damage_type": "Mechanical or Structural",
     "manufacturer": "Ashley Furniture",
@@ -256,7 +262,10 @@ Incluye todos los campos de `analyze-claim` mas 3 campos adicionales de verifica
     "eligible_input": true
   },
   "criteria_evaluations": {
-    "contract_verification": { "result": "Correct", "explanation": "Contract number is provided (CN-2025-34567). IMPORTANT: Please compare the name of the person that made the ticket or claim against the data in the contract to ensure they match." },
+    "contract_verification": {
+      "result": "Correct",
+      "explanation": "Contract number is provided (CN-2025-34567). IMPORTANT: Please compare the name of the person that made the ticket or claim against the data in the contract to ensure they match."
+    },
     "delivery_date": { "result": "In Warranty", "recommendation": "..." },
     "damage_classification_validation": {
       "result": true,
@@ -285,19 +294,19 @@ Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multi
 
 **Diferencias con `/api/agent-feedback/`:**
 
-| Aspecto              | `agent-feedback`                          | `agent-feedback-deep`           |
-| -------------------- | ----------------------------------------- | ------------------------------- |
-| Busqueda de politicas | 2 queries batch al vectorstore           | 4-5 tool calls del agente       |
-| Criterio 1           | Deterministico (`Correct`/`Incorrect` + explicacion) | LLM evalua con detalle |
-| Llamadas LLM         | 1 sola llamada `model.invoke()`           | ~6-8 (agent loop)               |
-| Tiempo estimado      | ~4-5s                                     | ~15-20s                         |
+| Aspecto               | `agent-feedback`                                     | `agent-feedback-deep`     |
+| --------------------- | ---------------------------------------------------- | ------------------------- |
+| Busqueda de politicas | 2 queries batch al vectorstore                       | 4-5 tool calls del agente |
+| Criterio 1            | Deterministico (`Correct`/`Incorrect` + explicacion) | LLM evalua con detalle    |
+| Llamadas LLM          | 1 sola llamada `model.invoke()`                      | ~6-8 (agent loop)         |
+| Tiempo estimado       | ~4-5s                                                | ~15-20s                   |
 
 **Respuesta:**
 
 ```json
 {
   "claim_summary": {
-    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "claim_type": "Defective product - broken leg",
     "product_type": "Furniture",
     "damage_type": "Mechanical or Structural",
     "manufacturer": "Ashley Furniture",
@@ -324,13 +333,13 @@ Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multi
 
 **Criterios de evaluacion (5):**
 
-| #   | Criterio                         | Metodo                                  | Usa RAG? |
-| --- | -------------------------------- | --------------------------------------- | -------- |
-| 1   | Verificacion de contrato         | Verificacion de `contract_number`       | No       |
-| 2   | Fecha de entrega                 | Fechas + RAG (politicas de plazos)      | Si       |
-| 3   | Clasificacion del dano           | LLM compara descripcion vs tipo con RAG | Si       |
-| 4   | Verificacion de adjuntos         | Boolean + RAG (requisitos de adjuntos)  | Si       |
-| 5   | Decision de elegibilidad final   | LLM sintetiza los 4 criterios + RAG     | Si       |
+| #   | Criterio                       | Metodo                                  | Usa RAG? |
+| --- | ------------------------------ | --------------------------------------- | -------- |
+| 1   | Verificacion de contrato       | Verificacion de `contract_number`       | No       |
+| 2   | Fecha de entrega               | Fechas + RAG (politicas de plazos)      | Si       |
+| 3   | Clasificacion del dano         | LLM compara descripcion vs tipo con RAG | Si       |
+| 4   | Verificacion de adjuntos       | Boolean + RAG (requisitos de adjuntos)  | Si       |
+| 5   | Decision de elegibilidad final | LLM sintetiza los 4 criterios + RAG     | Si       |
 
 ---
 
@@ -342,8 +351,21 @@ Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multi
 {
   "error": "Invalid input",
   "details": {
-    "claim_type": ["\"invalid\" is not a valid choice."],
-    "delivery_date": ["Date has wrong format. Use YYYY-MM-DD."]
+    "delivery_date": ["Date has wrong format. Use YYYY-MM-DD."],
+    "description": ["This field is required."]
+  }
+}
+```
+
+**400 - Validacion semantica de claim_type:**
+
+```json
+{
+  "error": "Invalid input",
+  "details": {
+    "claim_type": [
+      "Claim type not accepted: this appears to be a delivery complaint. Only claims for defective, damaged, or missing products/parts are accepted."
+    ]
   }
 }
 ```
@@ -382,7 +404,7 @@ curl -X POST http://localhost:8000/api/chat/ \
 curl -X POST http://localhost:8000/api/analyze-claim/ \
   -H "Content-Type: application/json" \
   -d '{
-    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "claim_type": "Defective product - broken leg",
     "damage_type": "Mechanical or Structural",
     "delivery_date": "2025-12-15",
     "product_type": "Furniture",
@@ -400,7 +422,7 @@ curl -X POST http://localhost:8000/api/analyze-claim/ \
 curl -X POST http://localhost:8000/api/agent-feedback/ \
   -H "Content-Type: application/json" \
   -d '{
-    "claim_type": "Defective, damaged product(s) or missing part(s)",
+    "claim_type": "Defective product - broken leg",
     "damage_type": "Mechanical or Structural",
     "delivery_date": "2025-12-15",
     "product_type": "Furniture",
