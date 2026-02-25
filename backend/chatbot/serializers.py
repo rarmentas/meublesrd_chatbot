@@ -80,6 +80,9 @@ class ClaimSummarySerializer(serializers.Serializer):
     product_type = serializers.CharField()
     damage_type = serializers.CharField()
     days_since_delivery = serializers.IntegerField(allow_null=True)
+    has_attachments = serializers.BooleanField(
+        help_text="Si el cliente adjuntó fotos u otra evidencia."
+    )
 
 
 class ToneAnalysisSerializer(serializers.Serializer):
@@ -106,6 +109,17 @@ class CommunicationRecommendationsSerializer(serializers.Serializer):
     suggested_opening = serializers.CharField(allow_blank=True)
 
 
+class AttachmentsVerificationSerializer(serializers.Serializer):
+    """Verificación de adjuntos según política (respuesta de analyze-claim)."""
+
+    result = serializers.BooleanField(
+        help_text="True si los adjuntos cumplen con la política, False si faltan o son inadecuados."
+    )
+    recommendation = serializers.CharField(
+        help_text="Explicación de si los adjuntos son adecuados o qué se requiere."
+    )
+
+
 class ClaimAnalysisResponseSerializer(serializers.Serializer):
     """Respuesta exitosa de POST /api/analyze-claim/."""
 
@@ -116,6 +130,7 @@ class ClaimAnalysisResponseSerializer(serializers.Serializer):
     )
     communication_recommendations = CommunicationRecommendationsSerializer()
     next_steps = serializers.ListField(child=serializers.CharField())
+    attachments_verification = AttachmentsVerificationSerializer()
     sources = serializers.ListField(child=serializers.CharField())
 
 
