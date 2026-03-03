@@ -3,7 +3,7 @@ console.log("Meubles RD Chatbot UI loaded");
 const WINDOW_FULL = { width: 400, height: 620 };
 const WINDOW_MIN = { width: 240, height: 48 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
     let currentTicketContext = null;
 
@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const resultDiv = document.getElementById("result");
     const chatInput = document.getElementById("chatInput");
     const sendMessageBtn = document.getElementById("sendMessageBtn");
+    const autoLoadSwitch = document.getElementById("autoLoadSwitch");
     const mainContent = document.getElementById("mainContent");
     const headerBar = document.querySelector(".header-bar");
     const minimizedBar = document.getElementById("minimizedBar");
@@ -41,6 +42,26 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     } else if (minimizeBtn) {
         minimizeBtn.style.display = "none";
+    }
+
+    /* =========================
+       AUTO-LOAD SWITCH (storage local)
+    ========================== */
+    const storage = await chrome.storage.local.get("automatic_loading");
+    const automaticLoading = storage.automatic_loading !== false;
+    if (autoLoadSwitch) {
+        if (automaticLoading) {
+            autoLoadSwitch.classList.add("on");
+            autoLoadSwitch.setAttribute("aria-checked", "true");
+        } else {
+            autoLoadSwitch.classList.remove("on");
+            autoLoadSwitch.setAttribute("aria-checked", "false");
+        }
+        autoLoadSwitch.addEventListener("click", () => {
+            const isOn = autoLoadSwitch.classList.toggle("on");
+            chrome.storage.local.set({ automatic_loading: isOn });
+            autoLoadSwitch.setAttribute("aria-checked", String(isOn));
+        });
     }
 
     const username = "A01796151";
@@ -75,9 +96,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function addMessage(text, sender = "assistant", formatMarkdown = true) {
         const msg = document.createElement("div");
-        msg.classList.add("chat-message", sender);
-        msg.innerHTML = formatMarkdown ? markdownToHtml(text) : text;
-
+        msg.classList.add("chat-message", "chat-bubble", sender);
+        if (sender === "user") {
+            const escaped = (text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+            msg.innerHTML = escaped;
+        } else {
+            msg.innerHTML = formatMarkdown ? markdownToHtml(text) : text;
+        }
         resultDiv.appendChild(msg);
         resultDiv.scrollTop = resultDiv.scrollHeight;
     }
@@ -446,6 +471,11 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         addMessage(message, "assistant", false);
+    }
+
+    /* Auto-analyze al abrir la extensión si automatic_loading está activo */
+    if (automaticLoading && analyzeBtn) {
+        setTimeout(() => analyzeBtn.click(), 150);
     }
 
 });

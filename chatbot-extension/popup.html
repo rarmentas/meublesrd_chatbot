@@ -228,6 +228,91 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Chat bubbles */
+        .chat-message {
+            margin: 8px 0;
+            padding: 10px 14px;
+            border-radius: 16px;
+            max-width: 90%;
+            word-wrap: break-word;
+        }
+
+        .chat-message.user {
+            margin-left: auto;
+            margin-right: 0;
+            background-color: #b5121b;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-message.assistant {
+            margin-left: 0;
+            margin-right: auto;
+            background-color: #e8e8e8;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-message.assistant.loading-spinner {
+            background-color: #e8e8e8;
+        }
+
+        /* Switch para auto-loading */
+        .analyze-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .analyze-row .button-primary {
+            flex: 1;
+        }
+
+        .switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .switch-wrapper label {
+            font-size: 12px;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .switch.on {
+            background: #b5121b;
+        }
+
+        .switch::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .switch.on::after {
+            transform: translateX(20px);
+        }
     </style>
 </head>
 
@@ -248,9 +333,15 @@
 
     <div id="mainContent" class="container">
 
-        <button id="analyzeBtn" class="button-primary">
-            Analyze Screen
-        </button>
+        <div class="analyze-row">
+            <button id="analyzeBtn" class="button-primary">
+                Analyze Screen
+            </button>
+            <div class="switch-wrapper">
+                <label for="autoLoadSwitch">Auto</label>
+                <div id="autoLoadSwitch" class="switch on" role="switch" aria-checked="true" title="Auto-analyze when opening extension"></div>
+            </div>
+        </div>
 
         <!-- Chat Section -->
         <div class="chatbot-container">
