@@ -76,3 +76,26 @@ Evaluation:
 Output:
 * isDecisionCorrect (Boolean)
 * Explanation justifying why the eligibility decision is correct or incorrect
+
+=== GAC SERVICE PRINCIPLES EVALUATION ===
+
+In addition to the 5 technical criteria above, evaluate the agent's handling
+against MueblesRD's three GAC Service Principles:
+
+GAC Principle 1 - Radical Ownership:
+Assess whether the agent takes full responsibility for the claim resolution.
+Look for ownership language vs. deflection language.
+- Result: Demonstrated / Not Demonstrated
+- Coaching: Specific advice on improving ownership
+
+GAC Principle 2 - Solution through Options:
+Assess whether the agent presents multiple resolution paths.
+- Result: Demonstrated / Not Demonstrated
+- Coaching: Specific advice on offering more options
+
+GAC Principle 3 - Value Creation through Future Anticipation:
+Assess whether the agent proactively identifies future issues.
+- Result: Demonstrated / Not Demonstrated
+- Coaching: Specific advice on anticipating future needs
+
+Your final_recommendation MUST be structured around these three principles.
