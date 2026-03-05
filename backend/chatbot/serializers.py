@@ -99,14 +99,57 @@ class PolicyRecommendationItemSerializer(serializers.Serializer):
     policy_reference = serializers.CharField()
     recommendation = serializers.CharField()
     priority = serializers.CharField(help_text="Ej: high, medium, low")
+    ownership_framing = serializers.CharField(
+        allow_blank=True,
+        required=False,
+        help_text="Frase de responsabilidad: 'We take responsibility for...'",
+    )
+
+
+class SolutionOptionSerializer(serializers.Serializer):
+    """Una opción de solución para el cliente."""
+
+    option_label = serializers.CharField(help_text="Ej: Option A: Replacement")
+    description = serializers.CharField()
+    timeline = serializers.CharField(allow_blank=True)
+    trade_offs = serializers.CharField(allow_blank=True)
 
 
 class CommunicationRecommendationsSerializer(serializers.Serializer):
     """Recomendaciones de comunicación para el agente."""
 
-    approach = serializers.CharField()
+    approach = serializers.CharField(
+        help_text="standard, empathetic, de-escalation o formal"
+    )
+    solution_options = serializers.ListField(
+        child=SolutionOptionSerializer(),
+        required=False,
+        allow_empty=True,
+        help_text="2-3 opciones de solución para ofrecer al cliente.",
+    )
     tips = serializers.ListField(child=serializers.CharField())
     suggested_opening = serializers.CharField(allow_blank=True)
+
+
+class AnticipationStepSerializer(serializers.Serializer):
+    """Paso de anticipación (Principio GAC 3)."""
+
+    potential_future_issue = serializers.CharField()
+    preventive_action = serializers.CharField()
+    follow_up_timeline = serializers.CharField(allow_blank=True)
+
+
+class GacAssessmentSerializer(serializers.Serializer):
+    """Evaluación GAC (principios de servicio al cliente)."""
+
+    ownership_score = serializers.CharField(
+        help_text="strong, moderate o weak"
+    )
+    ownership_evidence = serializers.CharField(allow_blank=True)
+    options_score = serializers.CharField(help_text="strong, moderate o weak")
+    options_evidence = serializers.CharField(allow_blank=True)
+    anticipation_score = serializers.CharField(help_text="strong, moderate o weak")
+    anticipation_evidence = serializers.CharField(allow_blank=True)
 
 
 class AttachmentsVerificationSerializer(serializers.Serializer):
@@ -130,7 +173,18 @@ class ClaimAnalysisResponseSerializer(serializers.Serializer):
     )
     communication_recommendations = CommunicationRecommendationsSerializer()
     next_steps = serializers.ListField(child=serializers.CharField())
+    anticipation_steps = serializers.ListField(
+        child=AnticipationStepSerializer(),
+        required=False,
+        allow_empty=True,
+        help_text="Pasos preventivos y seguimiento futuro (Principio GAC 3).",
+    )
     attachments_verification = AttachmentsVerificationSerializer()
+    gac_assessment = GacAssessmentSerializer(
+        required=False,
+        allow_null=True,
+        help_text="Evaluación de los 3 principios GAC en las recomendaciones.",
+    )
     sources = serializers.ListField(child=serializers.CharField())
 
 
@@ -152,17 +206,52 @@ class AgentClaimSummarySerializer(serializers.Serializer):
     eligible_input = serializers.BooleanField()
 
 
+class FinalRecommendationSerializer(serializers.Serializer):
+    """Recomendación final para el agente (coaching)."""
+
+    summary = serializers.CharField(help_text="Resumen general para el agente")
+    ownership_coaching = serializers.CharField(
+        help_text="Cómo demostrar mejor responsabilidad radical"
+    )
+    options_coaching = serializers.CharField(
+        help_text="Cómo presentar múltiples opciones de solución"
+    )
+    anticipation_coaching = serializers.CharField(
+        help_text="Qué problemas futuros abordar proactivamente"
+    )
+
+
+class GacPrincipleEvaluationSerializer(serializers.Serializer):
+    """Evaluación de un principio GAC."""
+
+    demonstrated = serializers.BooleanField()
+    feedback = serializers.CharField()
+
+
+class GacEvaluationSerializer(serializers.Serializer):
+    """Evaluación GAC del manejo del agente."""
+
+    ownership = GacPrincipleEvaluationSerializer()
+    solution_options = GacPrincipleEvaluationSerializer()
+    future_anticipation = GacPrincipleEvaluationSerializer()
+
+
 class AgentFeedbackResponseSerializer(serializers.Serializer):
     """Respuesta exitosa de POST /api/agent-feedback/ y POST /api/agent-feedback-deep/."""
 
     claim_summary = AgentClaimSummarySerializer()
     criteria_evaluations = serializers.DictField(
-        help_text="Evaluación por criterio (5): contract_verification, "
-                  "delivery_date, damage_classification_validation, "
-                  "attachments_verification, eligibility_decision. "
-                  "Cada uno tiene result y recommendation/explanation."
+        help_text="Evaluación por criterio (5): contract_verification "
+                  "(result, explanation), delivery_date (result, recommendation), "
+                  "damage_classification_validation, attachments_verification, "
+                  "eligibility_decision (isDecisionCorrect, explanation)."
     )
-    final_recommendation = serializers.CharField()
+    final_recommendation = FinalRecommendationSerializer()
+    gac_evaluation = GacEvaluationSerializer(
+        required=False,
+        allow_null=True,
+        help_text="Evaluación de los 3 principios GAC en el manejo del agente.",
+    )
     final_eligibility = serializers.DictField(
         help_text="Objeto con isEligible (bool) y justification (string)."
     )

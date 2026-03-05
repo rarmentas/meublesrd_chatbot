@@ -203,15 +203,33 @@ class ClaimAnalysisInputSerializer(serializers.Serializer):
         ("Furniture", "Furniture"),
     ]
 
-    claim_type = serializers.CharField(max_length=200)
-    damage_type = serializers.CharField(max_length=200)
-    delivery_date = serializers.DateField()
-    product_type = serializers.ChoiceField(choices=PRODUCT_TYPE_CHOICES)
+    claim_type = serializers.CharField(
+        max_length=200,
+        help_text="Tipo de reclamación. Ej: 'Defective, damaged product(s) or missing part(s)', "
+                  "'Error or Missing Product'. Validado por claim_type_validator.",
+    )
+    damage_type = serializers.CharField(
+        max_length=200,
+        help_text="Tipo de daño. Ej: 'Mechanical or Structural', 'Missing Part(s)'.",
+    )
+    delivery_date = serializers.DateField(
+        help_text="Fecha de entrega en formato YYYY-MM-DD.",
+    )
+    product_type = serializers.ChoiceField(
+        choices=PRODUCT_TYPE_CHOICES,
+        help_text="Categoría del producto.",
+    )
     manufacturer = serializers.CharField(max_length=100)
     store_of_purchase = serializers.CharField(max_length=100)
     product_code = serializers.CharField(max_length=50)
-    description = serializers.CharField(min_length=10, max_length=5000)
-    has_attachments = serializers.BooleanField()
+    description = serializers.CharField(
+        min_length=10,
+        max_length=5000,
+        help_text="Descripción del cliente (10-5000 caracteres).",
+    )
+    has_attachments = serializers.BooleanField(
+        help_text="True si el cliente adjuntó fotos u otra evidencia.",
+    )
 
     def validate_claim_type(self, value):
         is_valid, error_message = check_claim_type(value)
@@ -298,9 +316,16 @@ class ClaimAnalysisView(APIView):
 class AgentFeedbackInputSerializer(ClaimAnalysisInputSerializer):
     """Serializer for agent feedback evaluation. Extends claim analysis with verification fields."""
 
-    contract_number = serializers.CharField(max_length=100)
-    claim_date = serializers.DateField()
-    eligible = serializers.BooleanField()
+    contract_number = serializers.CharField(
+        max_length=100,
+        help_text="Número de contrato (obligatorio para criterio 1).",
+    )
+    claim_date = serializers.DateField(
+        help_text="Fecha de la reclamación en formato YYYY-MM-DD.",
+    )
+    eligible = serializers.BooleanField(
+        help_text="Decisión del agente: True si considera al cliente elegible.",
+    )
 
 
 # Ejemplo de body compartido para agent-feedback y agent-feedback-deep

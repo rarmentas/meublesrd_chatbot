@@ -128,12 +128,17 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Muebles RD Chatbot API',
     'DESCRIPTION': (
         'API REST para soporte de servicio al cliente de MueblesRD: RAG (LangChain, Pinecone, OpenAI), '
-        'análisis de reclamaciones y evaluación de agentes (5 criterios). '
-        'Endpoints: GET /api/health/, POST /api/chat/, POST /api/analyze-claim/ (9 campos), '
-        'POST /api/agent-feedback/ (optimizado ~4-5s), POST /api/agent-feedback-deep/ (exhaustivo ~15-20s), '
-        'POST /api/auth/token/. Autenticación por token o Basic (salvo health, docs y auth/token).'
+        'análisis de reclamaciones con principios GAC y evaluación de agentes (5 criterios). '
+        'Endpoints: GET /api/health/, POST /api/auth/token/, POST /api/chat/, '
+        'POST /api/analyze-claim/ (9 campos: claim_type, damage_type, delivery_date, product_type, '
+        'manufacturer, store_of_purchase, product_code, description, has_attachments), '
+        'POST /api/agent-feedback/ (optimizado ~4-5s, 12 campos: +contract_number, claim_date, eligible), '
+        'POST /api/agent-feedback-deep/ (exhaustivo ~15-20s, mismos 12 campos). '
+        'Respuestas incluyen: policy_recommendations, solution_options, anticipation_steps, gac_assessment, '
+        'gac_evaluation, final_recommendation (objeto con coaching). '
+        'Autenticación por token o Basic (salvo health, docs y auth/token).'
     ),
-    'VERSION': '1.0.0',
+    'VERSION': '1.1.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
     # Permite usar en Swagger: Basic (user/pass) o Token
