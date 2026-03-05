@@ -2,6 +2,12 @@
 
 API REST para soporte de servicio al cliente de MueblesRD. Utiliza RAG (Retrieval-Augmented Generation) con LangChain, Pinecone y OpenAI para consultar politicas internas, analizar reclamaciones y evaluar el desempeno de agentes de tienda.
 
+Todas las recomendaciones generadas por los endpoints de analisis y feedback incorporan los **3 Principios de Servicio GAC**:
+
+1. **Radical Ownership** — Responsabilidad total; lenguaje de propiedad ("Nos comprometemos a...", "Nuestro equipo se responsabiliza de...")
+2. **Solution through Options** — Siempre ofrecer 2-3 opciones de resolucion alternativas al cliente
+3. **Value Creation through Future Anticipation** — Identificar proactivamente riesgos futuros y acciones preventivas
+
 ## Requisitos
 
 - Python 3.10+
@@ -57,7 +63,7 @@ python manage.py runserver 8080
 backend_django/
 ├── manage.py
 ├── requirements.txt
-├── feedback-agent.txt          # Especificacion de criterios de evaluacion
+├── feedback-agent.txt          # Especificacion de criterios de evaluacion + principios GAC
 ├── mueblesrd_api/              # Proyecto Django
 │   ├── settings.py             # Config: CORS, REST Framework, sin BD
 │   ├── urls.py                 # Router principal → /api/
@@ -87,13 +93,13 @@ backend_django/
 
 ## Mapa de Endpoints
 
-| Metodo | Ruta                        | Descripcion                                                     |
-| ------ | --------------------------- | --------------------------------------------------------------- |
-| `GET`  | `/api/health/`              | Health check                                                    |
-| `POST` | `/api/chat/`                | Chat con RAG (consulta libre)                                   |
-| `POST` | `/api/analyze-claim/`       | Analisis de reclamacion + tono                                  |
-| `POST` | `/api/agent-feedback/`      | Evaluacion de agente optimizada (~4x mas rapido)                |
-| `POST` | `/api/agent-feedback-deep/` | Evaluacion de agente exhaustiva (8 criterios, multi-step agent) |
+| Metodo | Ruta                        | Descripcion                                                              |
+| ------ | --------------------------- | ------------------------------------------------------------------------ |
+| `GET`  | `/api/health/`              | Health check                                                             |
+| `POST` | `/api/chat/`                | Chat con RAG (consulta libre)                                            |
+| `POST` | `/api/analyze-claim/`       | Analisis de reclamacion + tono + principios GAC                          |
+| `POST` | `/api/agent-feedback/`      | Evaluacion de agente optimizada + coaching GAC (~4x mas rapido)          |
+| `POST` | `/api/agent-feedback-deep/` | Evaluacion de agente exhaustiva + coaching GAC (5 criterios + multi-step agent) |
 
 ---
 
@@ -192,11 +198,26 @@ Analiza una reclamacion de cliente: busca politicas relevantes, analiza el tono 
     {
       "policy_reference": "Section 4: Respecting Deadlines",
       "recommendation": "Claim is within the 90-day window.",
-      "priority": "high"
+      "priority": "high",
+      "ownership_framing": "We take responsibility for processing this claim within the warranty period and will ensure a resolution is provided promptly."
     }
   ],
   "communication_recommendations": {
     "approach": "standard",
+    "solution_options": [
+      {
+        "option_label": "Option A: Full replacement",
+        "description": "Replace the defective table with a new unit of the same model.",
+        "timeline": "5-7 business days",
+        "trade_offs": "Subject to stock availability"
+      },
+      {
+        "option_label": "Option B: Repair service",
+        "description": "Send a technician to repair the broken leg on-site.",
+        "timeline": "3-5 business days",
+        "trade_offs": "Repair may not match original finish"
+      }
+    ],
     "tips": ["Acknowledge the issue", "Reference the policy"],
     "suggested_opening": "Thank you for reaching out..."
   },
@@ -204,13 +225,37 @@ Analiza una reclamacion de cliente: busca politicas relevantes, analiza el tono 
     "Verify contract number in Salesforce",
     "Request photos of the damage"
   ],
+  "anticipation_steps": [
+    {
+      "potential_future_issue": "Customer may experience similar issues with other furniture pieces from the same batch.",
+      "preventive_action": "Check if other products from the same order have known quality issues and proactively offer inspection.",
+      "follow_up_timeline": "14 days after resolution"
+    }
+  ],
   "attachments_verification": {
     "result": true,
     "recommendation": "Photos have been provided as required by policy for mechanical damage claims."
   },
+  "gac_assessment": {
+    "ownership_score": "strong",
+    "ownership_evidence": "Recommendations use 'We will...' language and take full responsibility.",
+    "options_score": "strong",
+    "options_evidence": "Two resolution options provided with timelines and trade-offs.",
+    "anticipation_score": "moderate",
+    "anticipation_evidence": "Follow-up scheduled but could include more preventive measures."
+  },
   "sources": ["4. Respecting Deadlines", "5.1 Validation of Damage Type"]
 }
 ```
+
+**Campos GAC nuevos en la respuesta:**
+
+| Campo                                                  | Descripcion                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------ |
+| `policy_recommendations[].ownership_framing`           | Lenguaje de responsabilidad (Principio 1: Radical Ownership)       |
+| `communication_recommendations.solution_options`       | 2-3 opciones de resolucion con timeline y trade-offs (Principio 2) |
+| `anticipation_steps`                                   | Riesgos futuros y acciones preventivas (Principio 3)               |
+| `gac_assessment`                                       | Evaluacion de cumplimiento de los 3 principios GAC                 |
 
 ---
 
@@ -274,13 +319,30 @@ Incluye todos los campos de `analyze-claim` mas 3 campos adicionales de verifica
     "attachments_verification": { "result": true, "recommendation": "..." },
     "eligibility_decision": { "isDecisionCorrect": true, "explanation": "..." }
   },
-  "final_recommendation": "The agent handled this claim correctly...",
+  "final_recommendation": {
+    "summary": "The agent handled this claim correctly...",
+    "ownership_coaching": "Use language like 'We will ensure...' instead of 'You need to...' when communicating with the customer.",
+    "options_coaching": "Present at least 2 resolution paths (e.g., replacement vs. repair) with timelines.",
+    "anticipation_coaching": "Proactively check if other products from the same order may have similar issues and schedule a follow-up."
+  },
+  "gac_evaluation": {
+    "ownership": { "demonstrated": true, "feedback": "Agent took responsibility for the resolution process." },
+    "solution_options": { "demonstrated": false, "feedback": "Only one resolution path was offered. Suggest adding repair as an alternative." },
+    "future_anticipation": { "demonstrated": false, "feedback": "No follow-up or preventive measures were proposed." }
+  },
   "final_eligibility": { "isEligible": true, "justification": "..." },
   "sources": ["4. Respecting Deadlines", "5.1 Validation of Damage Type"]
 }
 ```
 
 > **Nota:** El criterio 1 devuelve `{"result": "Correct"/"Incorrect", "explanation": "..."}` de forma deterministica (presencia de contract_number), siempre incluye un recordatorio para que el agente compare el nombre del solicitante contra los datos del contrato.
+
+**Campos GAC nuevos en la respuesta:**
+
+| Campo                  | Descripcion                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| `final_recommendation` | Ahora es un objeto estructurado con `summary` + coaching por cada principio GAC         |
+| `gac_evaluation`       | Evaluacion de si el agente demostro cada principio GAC (`demonstrated` bool + feedback) |
 
 ---
 
@@ -325,13 +387,25 @@ Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multi
     "attachments_verification": { "result": true, "recommendation": "..." },
     "eligibility_decision": { "isDecisionCorrect": true, "explanation": "..." }
   },
-  "final_recommendation": "The agent handled this claim correctly...",
+  "final_recommendation": {
+    "summary": "The agent handled this claim correctly...",
+    "ownership_coaching": "Use language like 'We will ensure...' instead of 'You need to...'.",
+    "options_coaching": "Present at least 2 resolution paths with timelines.",
+    "anticipation_coaching": "Schedule a follow-up and check for batch-related issues."
+  },
+  "gac_evaluation": {
+    "ownership": { "demonstrated": true, "feedback": "Agent took responsibility for the resolution." },
+    "solution_options": { "demonstrated": false, "feedback": "Only one resolution was offered." },
+    "future_anticipation": { "demonstrated": false, "feedback": "No preventive measures proposed." }
+  },
   "final_eligibility": { "isEligible": true, "justification": "..." },
   "sources": ["4. Respecting Deadlines", "5.1 Validation of Damage Type"]
 }
 ```
 
-**Criterios de evaluacion (5):**
+> **Nota:** La estructura de `final_recommendation` y `gac_evaluation` es identica a `/api/agent-feedback/`. Este endpoint ademas evalua los principios GAC usando el prompt extendido de `feedback-agent.txt`.
+
+**Criterios de evaluacion (5 + GAC):**
 
 | #   | Criterio                       | Metodo                                  | Usa RAG? |
 | --- | ------------------------------ | --------------------------------------- | -------- |
@@ -340,6 +414,7 @@ Version exhaustiva de la evaluacion de agente. Usa un agente LangChain con multi
 | 3   | Clasificacion del dano         | LLM compara descripcion vs tipo con RAG | Si       |
 | 4   | Verificacion de adjuntos       | Boolean + RAG (requisitos de adjuntos)  | Si       |
 | 5   | Decision de elegibilidad final | LLM sintetiza los 4 criterios + RAG     | Si       |
+| GAC | Principios de Servicio GAC     | LLM evalua ownership, opciones y anticipacion | Si |
 
 ---
 

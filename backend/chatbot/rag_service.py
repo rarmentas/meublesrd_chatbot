@@ -30,6 +30,26 @@ vectorstore = PineconeVectorStore(
 # Initialize chat model
 model = init_chat_model("gpt-5.2", model_provider="openai")
 
+GAC_PRINCIPLES = """
+=== GAC PRINCIPLE 1: RADICAL OWNERSHIP ===
+Take full responsibility for resolving the customer's issue. Never blame the customer,
+the manufacturer, or other departments. Use ownership language: "We will ensure...",
+"Our team takes responsibility for...", "We commit to...". Frame every recommendation
+as an action WE take, not something the customer must figure out.
+
+=== GAC PRINCIPLE 2: SOLUTION THROUGH OPTIONS ===
+Always provide at least 2-3 alternative solution paths for the agent to offer the customer.
+Rank options by feasibility and customer benefit. Each option should include what it entails,
+expected timeline, and trade-offs or conditions.
+Never present a single take-it-or-leave-it resolution.
+
+=== GAC PRINCIPLE 3: VALUE CREATION THROUGH FUTURE ANTICIPATION ===
+Proactively identify what could go wrong next or what the customer might need in the future.
+Include preventive recommendations: "To prevent recurrence, suggest...",
+"The customer may also experience... so proactively offer...", "Schedule a follow-up
+check in X days to ensure satisfaction."
+"""
+
 
 @tool(response_format="content_and_artifact")
 def retrieve_context(query: str):
@@ -221,41 +241,75 @@ Customer Message:
 "{claim_data["description"]}"
 """
 
-    system_prompt = """You are a claims analyst for MueblesRD. Analyze claims using the available tools:
+    system_prompt = f"""You are a claims analyst for MueblesRD. Analyze claims using the available tools:
 1. retrieve_policies - Find relevant company policies for the claim type
 2. analyze_tone - Evaluate customer message tone
+
+{GAC_PRINCIPLES}
+
+You MUST apply all three GAC principles in every recommendation you produce.
 
 Your task is to:
 1. First retrieve relevant policies for the claim type and damage type
 2. Analyze the customer's message tone
 3. Evaluate whether attachments (photos/evidence) are required by policy for this type of claim and whether they have been provided
-4. Combine all analyses to provide structured recommendations
+4. Combine all analyses to provide structured recommendations that embody GAC principles
 
 Based on your analysis, provide recommendations including:
-- Policy-based recommendations with specific section references
-- Communication approach based on tone (standard/empathetic/de-escalation/formal)
+- Policy-based recommendations with specific section references and ownership framing (Principle 1)
+- Communication approach based on tone, including 2-3 solution options for the customer (Principle 2)
 - Ordered next steps for the customer service agent
+- Anticipation steps identifying future risks and preventive actions (Principle 3)
 - Whether the provided attachments status is adequate per policy
+- A GAC assessment scoring how well the recommendations demonstrate each principle
 
 IMPORTANT: When citing sources, use policy section names, never PDF filenames.
 
 Return your final response as valid JSON with this exact structure:
-{
-    "tone_analysis": {"tone": "...", "confidence": 0.0, "indicators": []},
+{{
+    "tone_analysis": {{"tone": "...", "confidence": 0.0, "indicators": []}},
     "policy_recommendations": [
-        {"policy_reference": "Section X: Title", "recommendation": "...", "priority": "high|medium|low"}
+        {{
+            "policy_reference": "Section X: Title",
+            "recommendation": "...",
+            "priority": "high|medium|low",
+            "ownership_framing": "We take responsibility for... and will..."
+        }}
     ],
-    "communication_recommendations": {
+    "communication_recommendations": {{
         "approach": "standard|empathetic|de-escalation|formal",
+        "solution_options": [
+            {{
+                "option_label": "Option A: ...",
+                "description": "...",
+                "timeline": "...",
+                "trade_offs": "..."
+            }}
+        ],
         "tips": ["tip1", "tip2"],
         "suggested_opening": "..."
-    },
+    }},
     "next_steps": ["step1", "step2"],
-    "attachments_verification": {
+    "anticipation_steps": [
+        {{
+            "potential_future_issue": "...",
+            "preventive_action": "...",
+            "follow_up_timeline": "..."
+        }}
+    ],
+    "attachments_verification": {{
         "result": true or false,
         "recommendation": "one sentence explaining whether attachments are adequate or what is needed"
-    }
-}"""
+    }},
+    "gac_assessment": {{
+        "ownership_score": "strong|moderate|weak",
+        "ownership_evidence": "...",
+        "options_score": "strong|moderate|weak",
+        "options_evidence": "...",
+        "anticipation_score": "strong|moderate|weak",
+        "anticipation_evidence": "..."
+    }}
+}}"""
 
     agent = create_agent(model, tools=[retrieve_policies, analyze_tone], system_prompt=system_prompt)
 
@@ -294,14 +348,24 @@ Please:
             "policy_recommendations": [],
             "communication_recommendations": {
                 "approach": "standard",
+                "solution_options": [],
                 "tips": [],
                 "suggested_opening": ""
             },
             "next_steps": [],
             "tone_analysis": {"tone": "neutral", "confidence": 0.5, "indicators": []},
+            "anticipation_steps": [],
             "attachments_verification": {
                 "result": claim_data["has_attachments"],
                 "recommendation": "Unable to parse LLM response. Please review attachments manually."
+            },
+            "gac_assessment": {
+                "ownership_score": "weak",
+                "ownership_evidence": "Unable to parse LLM response.",
+                "options_score": "weak",
+                "options_evidence": "Unable to parse LLM response.",
+                "anticipation_score": "weak",
+                "anticipation_evidence": "Unable to parse LLM response."
             }
         }
 
@@ -318,10 +382,12 @@ Please:
         "policy_recommendations": parsed.get("policy_recommendations", []),
         "communication_recommendations": parsed.get("communication_recommendations", {}),
         "next_steps": parsed.get("next_steps", []),
+        "anticipation_steps": parsed.get("anticipation_steps", []),
         "attachments_verification": parsed.get("attachments_verification", {
             "result": claim_data["has_attachments"],
             "recommendation": "No attachment evaluation available."
         }),
+        "gac_assessment": parsed.get("gac_assessment", {}),
         "sources": _extract_sources_from_docs(context_docs)
     }
 
@@ -375,6 +441,10 @@ def evaluate_agent_feedback_optimized(feedback_data: Dict[str, Any]) -> Dict[str
     # --- Single LLM call for criteria 2-5 ---
     prompt = f"""You are a quality assurance evaluator for MueblesRD. Below are the claim details, pre-computed verification results, and relevant company policies.
 
+{GAC_PRINCIPLES}
+
+You MUST apply all three GAC principles when generating your evaluation and coaching recommendations.
+
 Criterion 1 has already been evaluated deterministically:
 - Criterion 1 (Contract Verification): {"PASS" if has_contract_number else "FAIL"} — Contract #: {feedback_data["contract_number"]}
 
@@ -402,13 +472,28 @@ Using ONLY the policies above, evaluate criteria 2-5:
 4. Attachments — Are attachments provided as required by policy for the claim description?
 5. Eligibility Decision — Considering all 4 prior results, is the agent's eligibility decision correct?
 
+Additionally, evaluate the claim handling against GAC principles and provide specific coaching:
+- Ownership coaching: How can the agent better demonstrate radical ownership?
+- Options coaching: How can the agent present multiple solution options to the customer?
+- Anticipation coaching: What future issues should the agent proactively address?
+
 Return ONLY valid JSON with this exact structure:
 {{
     "delivery_date": {{"result": "In Warranty"/"Out of Warranty", "recommendation": "one sentence"}},
     "damage_classification_validation": {{"result": true/false, "recommendation": "one sentence"}},
     "attachments_verification": {{"result": true/false, "recommendation": "one sentence"}},
     "eligibility_decision": {{"isDecisionCorrect": true/false, "explanation": "one sentence"}},
-    "final_recommendation": "summary recommendation for the agent",
+    "final_recommendation": {{
+        "summary": "Overall summary for the agent",
+        "ownership_coaching": "How to better demonstrate radical ownership",
+        "options_coaching": "How to present multiple solution options",
+        "anticipation_coaching": "What future issues to proactively address"
+    }},
+    "gac_evaluation": {{
+        "ownership": {{"demonstrated": true/false, "feedback": "..."}},
+        "solution_options": {{"demonstrated": true/false, "feedback": "..."}},
+        "future_anticipation": {{"demonstrated": true/false, "feedback": "..."}}
+    }},
     "final_eligibility": {{"isEligible": true/false, "justification": "one sentence"}}
 }}"""
 
@@ -429,7 +514,17 @@ Return ONLY valid JSON with this exact structure:
             "damage_classification_validation": {"result": False, "recommendation": "Unable to parse LLM response."},
             "attachments_verification": {"result": feedback_data["has_attachments"], "recommendation": "Unable to parse LLM response."},
             "eligibility_decision": {"isDecisionCorrect": False, "explanation": "Unable to parse LLM response."},
-            "final_recommendation": "Unable to parse LLM response. Please review manually.",
+            "final_recommendation": {
+                "summary": "Unable to parse LLM response. Please review manually.",
+                "ownership_coaching": "Unable to parse LLM response.",
+                "options_coaching": "Unable to parse LLM response.",
+                "anticipation_coaching": "Unable to parse LLM response."
+            },
+            "gac_evaluation": {
+                "ownership": {"demonstrated": False, "feedback": "Unable to parse LLM response."},
+                "solution_options": {"demonstrated": False, "feedback": "Unable to parse LLM response."},
+                "future_anticipation": {"demonstrated": False, "feedback": "Unable to parse LLM response."}
+            },
             "final_eligibility": {"isEligible": False, "justification": "Unable to parse LLM response."}
         }
 
@@ -461,7 +556,8 @@ Return ONLY valid JSON with this exact structure:
             "attachments_verification": parsed.get("attachments_verification", {}),
             "eligibility_decision": parsed.get("eligibility_decision", {})
         },
-        "final_recommendation": parsed.get("final_recommendation", ""),
+        "final_recommendation": parsed.get("final_recommendation", {}),
+        "gac_evaluation": parsed.get("gac_evaluation", {}),
         "final_eligibility": parsed.get("final_eligibility", {}),
         "sources": _extract_sources_from_docs(all_docs)
     }
@@ -524,7 +620,17 @@ Return your response as valid JSON with this EXACT structure:
         "attachments_verification": {{"result": true/false, "recommendation": "..."}},
         "eligibility_decision": {{"isDecisionCorrect": true/false, "explanation": "..."}}
     }},
-    "final_recommendation": "A summary recommendation for the agent",
+    "final_recommendation": {{
+        "summary": "Overall summary for the agent",
+        "ownership_coaching": "How to better demonstrate radical ownership",
+        "options_coaching": "How to present multiple solution options",
+        "anticipation_coaching": "What future issues to proactively address"
+    }},
+    "gac_evaluation": {{
+        "ownership": {{"demonstrated": true/false, "feedback": "..."}},
+        "solution_options": {{"demonstrated": true/false, "feedback": "..."}},
+        "future_anticipation": {{"demonstrated": true/false, "feedback": "..."}}
+    }},
     "final_eligibility": {{"isEligible": true/false, "justification": "..."}}
 }}"""
 
@@ -570,7 +676,17 @@ After retrieving the relevant policies, evaluate all 5 criteria and return the s
                 "attachments_verification": {"result": feedback_data["has_attachments"], "recommendation": "Unable to parse LLM response."},
                 "eligibility_decision": {"isDecisionCorrect": False, "explanation": "Unable to parse LLM response."}
             },
-            "final_recommendation": "Unable to parse LLM response. Please review manually.",
+            "final_recommendation": {
+                "summary": "Unable to parse LLM response. Please review manually.",
+                "ownership_coaching": "Unable to parse LLM response.",
+                "options_coaching": "Unable to parse LLM response.",
+                "anticipation_coaching": "Unable to parse LLM response."
+            },
+            "gac_evaluation": {
+                "ownership": {"demonstrated": False, "feedback": "Unable to parse LLM response."},
+                "solution_options": {"demonstrated": False, "feedback": "Unable to parse LLM response."},
+                "future_anticipation": {"demonstrated": False, "feedback": "Unable to parse LLM response."}
+            },
             "final_eligibility": {"isEligible": False, "justification": "Unable to parse LLM response."}
         }
 
@@ -586,7 +702,8 @@ After retrieving the relevant policies, evaluate all 5 criteria and return the s
             "eligible_input": feedback_data["eligible"]
         },
         "criteria_evaluations": parsed.get("criteria_evaluations", {}),
-        "final_recommendation": parsed.get("final_recommendation", ""),
+        "final_recommendation": parsed.get("final_recommendation", {}),
+        "gac_evaluation": parsed.get("gac_evaluation", {}),
         "final_eligibility": parsed.get("final_eligibility", {}),
         "sources": _extract_sources_from_docs(context_docs)
     }
