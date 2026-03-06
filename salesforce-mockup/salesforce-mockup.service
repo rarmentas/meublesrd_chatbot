@@ -1,6 +1,6 @@
 # Systemd unit para Meubles RD Salesforce mockup (uvicorn).
 # Instalación (como root o con sudo):
-#   sudo cp /home/rarme/meublesrd_chatbot/salesforce-mockup/salesforce-mockup.service /etc/systemd/system/
+#   sudo cp /opt/gac-copilot/salesforce-mockup/salesforce-mockup.service /etc/systemd/system/
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable salesforce-mockup
 #   sudo systemctl start salesforce-mockup
@@ -14,13 +14,13 @@ After=network.target
 Type=simple
 User=rarme
 Group=rarme
-WorkingDirectory=/home/rarme/meublesrd_chatbot/salesforce-mockup
-ExecStart=/home/rarme/meublesrd_chatbot/salesforce-mockup/start-prod.sh
+WorkingDirectory=/opt/gac-copilot/salesforce-mockup
+ExecStart=/opt/gac-copilot/salesforce-mockup/start-prod.sh
 Restart=always
 RestartSec=3
-# Variables de entorno opcionales (descomenta y ajusta si hace falta)
+# Puerto configurado en salesforce-mockup/.env (UVICORN_PORT)
 # Environment="ALLOWED_HOSTS=localhost,127.0.0.1,tudominio.com"
-# Environment="UVICORN_PORT=8000"
+# Environment="DJANGO_SECRET_KEY=tu-secret-key"
 
 [Install]
 WantedBy=multi-user.target
