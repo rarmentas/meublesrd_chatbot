@@ -1,4 +1,5 @@
 # --- Secrets / credenciales (NUNCA commitear) ---
+installation_status.md
 .env
 .env.*
 !.env.example
